@@ -64,8 +64,23 @@ CHIP ALU {
 
   // no
   Not16 (in=fResult, out=notFResult);
-  Mux16 (a=fResult, b=notFResult, sel=no, out=out, out=tempOut, out[15]=ng);
+  Mux16 (a=fResult, b=notFResult, sel=no, out=out, out[0]=tempOut0, out[1]=tempOut1, out[2]=tempOut2, out[3]=tempOut3, out[4]=tempOut4, out[5]=tempOut5, out[6]=tempOut6, out[7]=tempOut7, out[8]=tempOut8, out[9]=tempOut9, out[10]=tempOut10, out[11]=tempOut11, out[12]=tempOut12, out[13]=tempOut13, out[14]=tempOut14, out[15]=tempOut15, out[15]=ng);
 
   // zr
-
+  Or (a=tempOut0, b=tempOut1, out=or0);
+  Or (a=or0, b=tempOut2, out=or1);
+  Or (a=or1, b=tempOut3, out=or2);
+  Or (a=or2, b=tempOut4, out=or3);
+  Or (a=or3, b=tempOut5, out=or4);
+  Or (a=or4, b=tempOut6, out=or5);
+  Or (a=or5, b=tempOut7, out=or6);
+  Or (a=or6, b=tempOut8, out=or7);
+  Or (a=or7, b=tempOut9, out=or8);
+  Or (a=or8, b=tempOut10, out=or9);
+  Or (a=or9, b=tempOut11, out=or10);
+  Or (a=or10, b=tempOut12, out=or11);
+  Or (a=or11, b=tempOut13, out=or12);
+  Or (a=or12, b=tempOut14, out=or13);
+  Or (a=or13, b=tempOut15, out=or14);
+  Not (in=or14, out=zr);
 }

@@ -12,11 +12,21 @@
  */
 
 CHIP Mux8Way16 {
-    IN a[16], b[16], c[16], d[16],
-       e[16], f[16], g[16], h[16],
-       sel[3];
-    OUT out[16];
+  IN a[16], b[16], c[16], d[16],
+  e[16], f[16], g[16], h[16],
+  sel[3];
+  OUT out[16];
 
-    PARTS:
-    // Put your code here:
+  PARTS:
+  Mux4Way16 (a=a, b=b, c=c, d=d, sel=sel[0..1], out=aToDMux);
+  Mux4Way16 (a=e, b=f, c=g, d=h, sel=sel[0..1], out=eToHMux);
+  Not (in=sel[2], out=notSel2);
+
+  // And first mux with MSB
+  And16 (a[0]=notSel2, a[1]=notSel2, a[2]=notSel2, a[3]=notSel2, a[4]=notSel2, a[5]=notSel2, a[6]=notSel2, a[7]=notSel2, a[8]=notSel2, a[9]=notSel2, a[10]=notSel2, a[11]=notSel2, a[12]=notSel2, a[13]=notSel2, a[14]=notSel2, a[15]=notSel2, b=aToDMux, out=firstMuxOut);
+
+  // And second mux with MSB
+  And16 (a[0]=sel[2], a[1]=sel[2], a[2]=sel[2], a[3]=sel[2], a[4]=sel[2], a[5]=sel[2], a[6]=sel[2], a[7]=sel[2], a[8]=sel[2], a[9]=sel[2], a[10]=sel[2], a[11]=sel[2], a[12]=sel[2], a[13]=sel[2], a[14]=sel[2], a[15]=sel[2], b=eToHMux, out=secondMuxOut);
+
+  Or16 (a=firstMuxOut, b=secondMuxOut, out=out);
 }

@@ -12,9 +12,31 @@
  */
 
 CHIP Mux4Way16 {
-    IN a[16], b[16], c[16], d[16], sel[2];
-    OUT out[16];
+  IN a[16], b[16], c[16], d[16], sel[2];
+  OUT out[16];
 
-    PARTS:
-    // Put your code here:
+  PARTS:
+  Not (in=sel[0], out=notSel0);
+  Not (in=sel[1], out=notSel1);
+
+  // Outputting A
+  And (a=notSel0, b=notSel1, out=notSel0AndNotSel1);
+  And16 (a[0]=notSel0AndNotSel1, a[1]=notSel0AndNotSel1, a[2]=notSel0AndNotSel1, a[3]=notSel0AndNotSel1, a[4]=notSel0AndNotSel1, a[5]=notSel0AndNotSel1, a[6]=notSel0AndNotSel1, a[7]=notSel0AndNotSel1, a[8]=notSel0AndNotSel1, a[9]=notSel0AndNotSel1, a[10]=notSel0AndNotSel1, a[11]=notSel0AndNotSel1, a[12]=notSel0AndNotSel1, a[13]=notSel0AndNotSel1, a[14]=notSel0AndNotSel1, a[15]=notSel0AndNotSel1, b=a, out=outA);
+
+  // Outputting B
+  And (a=sel[0], b=notSel1, out=sel0AndNotSel1);
+  And16 (a[0]=sel0AndNotSel1, a[1]=sel0AndNotSel1, a[2]=sel0AndNotSel1, a[3]=sel0AndNotSel1, a[4]=sel0AndNotSel1, a[5]=sel0AndNotSel1, a[6]=sel0AndNotSel1, a[7]=sel0AndNotSel1, a[8]=sel0AndNotSel1, a[9]=sel0AndNotSel1, a[10]=sel0AndNotSel1, a[11]=sel0AndNotSel1, a[12]=sel0AndNotSel1, a[13]=sel0AndNotSel1, a[14]=sel0AndNotSel1, a[15]=sel0AndNotSel1, b=b, out=outB);
+
+  // Outputting C
+  And (a=notSel0, b=sel[1], out=notSel0AndSel1);
+  And16 (a[0]=notSel0AndSel1, a[1]=notSel0AndSel1, a[2]=notSel0AndSel1, a[3]=notSel0AndSel1, a[4]=notSel0AndSel1, a[5]=notSel0AndSel1, a[6]=notSel0AndSel1, a[7]=notSel0AndSel1, a[8]=notSel0AndSel1, a[9]=notSel0AndSel1, a[10]=notSel0AndSel1, a[11]=notSel0AndSel1, a[12]=notSel0AndSel1, a[13]=notSel0AndSel1, a[14]=notSel0AndSel1, a[15]=notSel0AndSel1, b=c, out=outC);
+
+  // Outputting D
+  And (a=sel[0], b=sel[1], out=sel0AndSel1);
+  And16 (a[0]=sel0AndSel1, a[1]=sel0AndSel1, a[2]=sel0AndSel1, a[3]=sel0AndSel1, a[4]=sel0AndSel1, a[5]=sel0AndSel1, a[6]=sel0AndSel1, a[7]=sel0AndSel1, a[8]=sel0AndSel1, a[9]=sel0AndSel1, a[10]=sel0AndSel1, a[11]=sel0AndSel1, a[12]=sel0AndSel1, a[13]=sel0AndSel1, a[14]=sel0AndSel1, a[15]=sel0AndSel1, b=d, out=outD);
+
+  // Or'ing them all together
+  Or16 (a=outA, b=outB, out=aAndB);
+  Or16 (a=aAndB, b=outC, out=aAndBAndC);
+  Or16 (a=aAndBAndC, b=outD, out=out);
 }

@@ -24,14 +24,6 @@ node {
   for(project in projects) {
     stage(name: "Project ${project}") {
       parallel generateStepsForProject(project)
-      if (env.BRANCH_NAME == 'master') {
-        stage(name: "Build zip for ${project}") {
-          dir('./projects/${project}') {
-            zip zipFile: "project${project}.zip", glob: "*.hdl"
-            archiveArtifacts artifacts: "project${project}.zip"
-          }
-        }
-      }
     }
   }
 }

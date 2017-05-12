@@ -17,28 +17,27 @@ def createASMTestStep(projectNum, filePath, fileName) {
     }
 }
 
-def generateStepsForProject(projectNum, executable) {
+def generateStepsForProject(projectNum, extension) {
+    generatedSteps = [:]
     dir("projects/${projectNum}") {
         files = sh(script: "find | grep tst", returnStdout: true).trim().split()
-        generatedSteps = [:]
         for(int i = 0; i < files.length; i++) {
             filePath = "${pwd()}/${files[i]}"
             fileName = filePath.split("/").last()
-            if(executable == "HardwareSimulator") {
+            if(extension == "hdl") {
                 generatedSteps[fileName]  = createHDLTestStep(projectNum, filePath, fileName);
             } else {
                 generatedSteps[fileName] = createASMTestStep(projectNum, filePath, fileName);
             }
         }
-        return generatedSteps
     }
+    return generatedSteps
 }
 
 node {
     checkout scm
 
-    names = ["01", "HardwareSimulator", "02", "HardwareSimulator", "03", "HardwareSimulator",
-    "04", "CPUEmulator"]
+    names = ["01", "hdl", "02", "hdl", "03", "hdl", "04", "asm"]
 
     for(int i = 0; i < names.size(); i+=2) {
         projectName = names[i]

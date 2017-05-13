@@ -37,7 +37,7 @@ def generateStepsForProject(projectNum, extension) {
 node {
     checkout scm
 
-    names = ["01", "hdl", "02", "hdl", "03", "hdl", "04", "asm"]
+    names = ["01", "hdl", "02", "hdl", "03", "hdl", "04", "asm", "05", "hdl"]
 
     for(int i = 0; i < names.size(); i+=2) {
         projectName = names[i]

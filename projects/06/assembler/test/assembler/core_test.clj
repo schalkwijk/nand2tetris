@@ -14,3 +14,7 @@
 
 (deftest assemble-returns-array-of-instructions
   (is (= ["0000000000000010" "1110110000010000" "0000000000000011"] (assemble (seq ["@2" "D=A" "@3"])))))
+
+(deftest assemble-totally-ignores-comments
+  (is (= ["0000000000000010" "1110110000010000" "0000000000000011"]
+         (assemble (seq ["// top level comment " "@2 // comment on line" "D=A" "@3"])))))

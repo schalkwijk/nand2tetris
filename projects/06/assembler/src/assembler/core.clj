@@ -27,6 +27,16 @@
   (let [[dest cmp] (str/split raw #"=")]
   {:instruction (str "111" (parse-c-cmp cmp) (parse-c-dest dest) (parse-c-jump "filler"))}))
 
+;; whitespace handling
+(defn- strip-out-whitespace-and-comments [instruction]
+  (-> instruction
+      (str/split #"//")
+      first
+      str/trim))
+
+(defn- strip-out-whitespace-and-comments-from-instructions [instructions]
+  (filter #(not (str/blank? %)) (map (fn [instr] (strip-out-whitespace-and-comments instr)) instructions)))
+
 ;; main
 (defn parse-instruction [& {:keys [raw]}]
   (if (= (subs raw 0 1) "@")
@@ -34,7 +44,7 @@
     (parse-c-instruction raw)))
 
 (defn assemble [instructions]
-  (map #(:instruction (parse-instruction :raw %)) instructions))
+  (map #(:instruction (parse-instruction :raw %)) (strip-out-whitespace-and-comments-from-instructions instructions)))
 
 (defn -main [file]
   (with-open [rdr (clojure.java.io/reader file)]

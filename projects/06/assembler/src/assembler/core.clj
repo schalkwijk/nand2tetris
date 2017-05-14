@@ -1,6 +1,8 @@
 (ns assembler.core
   (:require [clojure.string :as str]))
 
+(def instruction-regex #"^(?:([MDA]{1,3})=)?([-+]?(?:A|M|D|1|1|0)(?:[+-\|\&][AMD10])?)(?:;(J[GELNM][QTEP]))?$")
+
 ;; a instruction
 (defn- decimal-to-binary [decimal]
   (str/replace (format "%15s" (Integer/toString decimal 2)) " " "0"))
@@ -9,23 +11,48 @@
   {:instruction (str "0" (decimal-to-binary (Integer/parseInt (str/replace-first raw "@" ""))))})
 
 ;; c instruction
+
+(def cmp-instruction-map
+  (hash-map
+   #"A" "110000"
+   #"D\+[AM]" "000010"
+   #"D" "001100"
+   #"0" "101010"
+   #"1" "111111"
+   #"-1" "111010"
+   #"D\+1" "011111"
+   #"[AM]\+1" "110111"
+   #"[AM]-1" "110010"
+   #"D-1" "001110"
+   #"D-[AM]" "010011"
+   #"-D" "001111"
+   #"[AM]-D" "000111"
+   #"-[AM]" "110011"
+   #"D&[AM]" "000000"
+   #"D\|[AM]" "010101"
+   ))
+
 (defn- parse-c-cmp [cmp]
-  (case cmp
-    "A" "0110000"
-    "D+A" "0000010"
-    "D" "0001100"))
+  (let [a (if (str/includes? cmp "M") "1" "0")]
+    (str a (nth (first (filter #(re-matches (first %1) cmp) (seq cmp-instruction-map))) 1))))
 
 (defn- parse-c-dest [dest]
   (case dest
+    "M" "001"
     "D" "010"
-    "M" "001"))
+    "MD" "011"
+    "A" "100"
+    "AM" "101"
+    "AD" "110"
+    "AMD" "111"
+    "000"))
 
 (defn- parse-c-jump [jump]
   "000")
 
 (defn- parse-c-instruction [raw]
-  (let [[dest cmp] (str/split raw #"=")]
-  {:instruction (str "111" (parse-c-cmp cmp) (parse-c-dest dest) (parse-c-jump "filler"))}))
+  (let [[match dst cmp jmp] (re-matches instruction-regex raw)]
+  {:instruction (str "111" (parse-c-cmp cmp) (parse-c-dest dst) (parse-c-jump jmp))}))
 
 ;; whitespace handling
 (defn- strip-out-whitespace-and-comments [instruction]

@@ -28,7 +28,14 @@
   (is (= "1111000111000000" (:instruction (parse-instruction :raw "M-D"))))
   (is (= "1111000000000000" (:instruction (parse-instruction :raw "D&M"))))
   (is (= "1110000000000000" (:instruction (parse-instruction :raw "D&A"))))
-  (is (= "1110010101000000" (:instruction (parse-instruction :raw "D|A")))))
+  (is (= "1110010101000000" (:instruction (parse-instruction :raw "D|A"))))
+  (is (= "1110110111000100" (:instruction (parse-instruction :raw "A+1;JLT"))))
+  (is (= "1110000010010110" (:instruction (parse-instruction :raw "D=D+A;JLE"))))
+  (is (= "1110111010100101" (:instruction (parse-instruction :raw "A=-1;JNE"))))
+  (is (= "1110000010010011" (:instruction (parse-instruction :raw "D=D+A;JGE"))))
+  (is (= "1110000000000010" (:instruction (parse-instruction :raw "D&A;JEQ"))))
+  (is (= "1110010101000001" (:instruction (parse-instruction :raw "D|A;JGT"))))
+  (is (= "1110001100111111" (:instruction (parse-instruction :raw "AMD=D;JMP")))))
 
 
 (deftest assemble-returns-array-of-instructions

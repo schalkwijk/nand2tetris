@@ -11,7 +11,6 @@
   {:instruction (str "0" (decimal-to-binary (Integer/parseInt (str/replace-first raw "@" ""))))})
 
 ;; c instruction
-
 (def cmp-instruction-map
   (hash-map
    #"A" "110000"
@@ -48,7 +47,15 @@
     "000"))
 
 (defn- parse-c-jump [jump]
-  "000")
+  (case jump
+    "JMP" "111"
+    "JGT" "001"
+    "JEQ" "010"
+    "JGE" "011"
+    "JLT" "100"
+    "JNE" "101"
+    "JLE" "110"
+    "000"))
 
 (defn- parse-c-instruction [raw]
   (let [[match dst cmp jmp] (re-matches instruction-regex raw)]

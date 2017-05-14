@@ -3,3 +3,6 @@
 *.hack
 *Simulator.dat
 *Emulator.dat
+*target
+.lein-failures
+.nrepl-port

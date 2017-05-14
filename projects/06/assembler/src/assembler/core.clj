@@ -1,7 +1,7 @@
 (ns assembler.core
   (:require [clojure.string :as str]))
 
-(def instruction-regex #"^(?:([MDA]{1,3})=)?([-+]?(?:A|M|D|1|1|0)(?:[+-\|\&][AMD10])?)(?:;(J[GELNM][QTEP]))?$")
+(def instruction-regex #"^(?:([MDA]{1,3})=)?([-+!]?(?:A|M|D|1|1|0)(?:[+-\|\&][AMD10])?)(?:;(J[GELNM][QTEP]))?$")
 
 ;; a instruction
 (defn- decimal-to-binary [decimal]
@@ -13,7 +13,8 @@
 ;; c instruction
 (def cmp-instruction-map
   (hash-map
-   #"A" "110000"
+   #"[AM]" "110000"
+   #"![AM]" "110001"
    #"D\+[AM]" "000010"
    #"D" "001100"
    #"0" "101010"

@@ -10,6 +10,7 @@
 (deftest assembling-c-instructions
   (is (= "1110101010001000" (:instruction (parse-instruction :raw "M=0"))))
   (is (= "1110111111010000" (:instruction (parse-instruction :raw "D=1"))))
+  (is (= "1111110000010000" (:instruction (parse-instruction :raw "D=M"))))
   (is (= "1110111010100000" (:instruction (parse-instruction :raw "A=-1"))))
   (is (= "1110001100111000" (:instruction (parse-instruction :raw "AMD=D"))))
   (is (= "1110110000101000" (:instruction (parse-instruction :raw "AM=A"))))
@@ -27,6 +28,7 @@
   (is (= "1111010011000000" (:instruction (parse-instruction :raw "D-M"))))
   (is (= "1111000111000000" (:instruction (parse-instruction :raw "M-D"))))
   (is (= "1111000000000000" (:instruction (parse-instruction :raw "D&M"))))
+  (is (= "1111110001000000" (:instruction (parse-instruction :raw "!M"))))
   (is (= "1110000000000000" (:instruction (parse-instruction :raw "D&A"))))
   (is (= "1110010101000000" (:instruction (parse-instruction :raw "D|A"))))
   (is (= "1110110111000100" (:instruction (parse-instruction :raw "A+1;JLT"))))

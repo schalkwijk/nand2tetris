@@ -1,16 +1,29 @@
 (ns assembler.core
   (:require [clojure.string :as str]))
 
-(def instruction-regex #"^(?:([MDA]{1,3})=)?([-+!]?(?:A|M|D|1|1|0)(?:[+-\|\&][AMD10])?)(?:;(J[GELNM][QTEP]))?$")
-
 ;; a instruction
+(def symbol-table
+  (hash-map
+   "SCREEN" "0000000000000000"
+   "KDB" "0100000000000000"
+   "SP" "0000000000000000"
+   "ARG" "0000000000000010"
+   "LCL" "0000000000000001"
+   "THIS" "0000000000000011"
+   "THAT" "0000000000000100"))
+
 (defn- decimal-to-binary [decimal]
   (str/replace (format "%15s" (Integer/toString decimal 2)) " " "0"))
 
 (defn- parse-a-instruction [raw]
-  {:instruction (str "0" (decimal-to-binary (Integer/parseInt (str/replace-first raw "@" ""))))})
+  (let [symbolOrNumber (str/replace-first raw "@" "")]
+    (if (contains? symbol-table symbolOrNumber)
+      {:instruction (get symbol-table symbolOrNumber)}
+      {:instruction (str "0" (decimal-to-binary (Integer/parseInt symbolOrNumber)))})))
 
 ;; c instruction
+(def c-instruction-regex #"^(?:([MDA]{1,3})=)?([-+!]?(?:A|M|D|1|1|0)(?:[+-\|\&][AMD10])?)(?:;(J[GELNM][QTEP]))?$")
+
 (def cmp-instruction-map
   (hash-map
    #"[AM]" "110000"
@@ -59,7 +72,7 @@
     "000"))
 
 (defn- parse-c-instruction [raw]
-  (let [[match dst cmp jmp] (re-matches instruction-regex raw)]
+  (let [[match dst cmp jmp] (re-matches c-instruction-regex raw)]
   {:instruction (str "111" (parse-c-cmp cmp) (parse-c-dest dst) (parse-c-jump jmp))}))
 
 ;; whitespace handling

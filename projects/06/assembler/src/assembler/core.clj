@@ -61,7 +61,6 @@
     "000"))
 
 (defn- parse-c-instruction [raw]
-  (println raw)
   (let [[match dst cmp jmp] (re-matches c-instruction-regex raw)]
   {:instruction (str "111" (parse-c-cmp cmp) (parse-c-dest dst) (parse-c-jump jmp))}))
 

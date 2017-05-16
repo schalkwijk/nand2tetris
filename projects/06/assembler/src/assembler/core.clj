@@ -1,25 +1,14 @@
 (ns assembler.core
-  (:require [clojure.string :as str]))
-
-;; a instruction
-(def symbol-table
-  (hash-map
-   "SCREEN" "0000000000000000"
-   "KDB" "0100000000000000"
-   "SP" "0000000000000000"
-   "ARG" "0000000000000010"
-   "LCL" "0000000000000001"
-   "THIS" "0000000000000011"
-   "THAT" "0000000000000100"))
+  (:require [clojure.string :as str]
+            [assembler.symbol-table :as symbol-table]))
 
 (defn- decimal-to-binary [decimal]
   (str/replace (format "%15s" (Integer/toString decimal 2)) " " "0"))
 
-(defn- parse-a-instruction [raw]
-  (let [symbolOrNumber (str/replace-first raw "@" "")]
-    (if (contains? symbol-table symbolOrNumber)
-      {:instruction (get symbol-table symbolOrNumber)}
-      {:instruction (str "0" (decimal-to-binary (Integer/parseInt symbolOrNumber)))})))
+(defn- parse-a-instruction [raw symbol-table]
+  (if (contains? symbol-table raw)
+    {:instruction (get symbol-table raw)}
+    {:instruction (str "0" (decimal-to-binary (Integer/parseInt (str/replace raw "@" ""))))}))
 
 ;; c instruction
 (def c-instruction-regex #"^(?:([MDA]{1,3})=)?([-+!]?(?:A|M|D|1|1|0)(?:[+-\|\&][AMD10])?)(?:;(J[GELNM][QTEP]))?$")
@@ -72,27 +61,34 @@
     "000"))
 
 (defn- parse-c-instruction [raw]
+  (println raw)
   (let [[match dst cmp jmp] (re-matches c-instruction-regex raw)]
   {:instruction (str "111" (parse-c-cmp cmp) (parse-c-dest dst) (parse-c-jump jmp))}))
 
-;; whitespace handling
-(defn- strip-out-whitespace-and-comments [instruction]
-  (-> instruction
-      (str/split #"//")
-      first
-      str/trim))
+;; whitespace / label handling
+(defn- instruction-is-not-label-or-comment [instruction]
+  (and (not (-> instruction
+               (str/split #"//")
+               first
+               str/trim
+               str/blank?))
+      (->> instruction
+           (re-matches #"\(.*\)")
+           nil?)))
 
-(defn- strip-out-whitespace-and-comments-from-instructions [instructions]
-  (filter #(not (str/blank? %)) (map (fn [instr] (strip-out-whitespace-and-comments instr)) instructions)))
+(defn- strip-out-comments-and-labels [instructions]
+  (map #(str/trim (first (str/split % #"//"))) (filter instruction-is-not-label-or-comment instructions)))
 
 ;; main
-(defn parse-instruction [& {:keys [raw]}]
+(defn parse-instruction [& {:keys [raw generated-symbol-table]}]
   (if (= (subs raw 0 1) "@")
-    (parse-a-instruction raw)
+    (parse-a-instruction raw generated-symbol-table)
     (parse-c-instruction raw)))
 
 (defn assemble [instructions]
-  (map #(:instruction (parse-instruction :raw %)) (strip-out-whitespace-and-comments-from-instructions instructions)))
+  (let [generated-symbol-table (symbol-table/generate-symbol-table instructions)]
+    (map #(:instruction (parse-instruction :raw % :generated-symbol-table generated-symbol-table))
+         (strip-out-comments-and-labels instructions))))
 
 (defn -main [file]
   (with-open [rdr (clojure.java.io/reader file)]

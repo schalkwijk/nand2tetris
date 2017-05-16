@@ -7,15 +7,6 @@
   (is (= "0000000000000011" (:instruction (parse-instruction :raw "@3"))))
   (is (= "0000000000000000" (:instruction (parse-instruction :raw "@0")))))
 
-(deftest assembling-a-instructions-with-builtin-labels
-  (is (= "0000000000000000" (:instruction (parse-instruction :raw "@SCREEN"))))
-  (is (= "0100000000000000" (:instruction (parse-instruction :raw "@KDB"))))
-  (is (= "0000000000000000" (:instruction (parse-instruction :raw "@SP"))))
-  (is (= "0000000000000010" (:instruction (parse-instruction :raw "@ARG"))))
-  (is (= "0000000000000001" (:instruction (parse-instruction :raw "@LCL"))))
-  (is (= "0000000000000011" (:instruction (parse-instruction :raw "@THIS"))))
-  (is (= "0000000000000100" (:instruction (parse-instruction :raw "@THAT")))))
-
 (deftest assembling-c-instructions
   (is (= "1110101010001000" (:instruction (parse-instruction :raw "M=0"))))
   (is (= "1110111111010000" (:instruction (parse-instruction :raw "D=1"))))
@@ -54,3 +45,8 @@
 (deftest assemble-totally-ignores-comments
   (is (= ["0000000000000010" "1110110000010000" "0000000000000011"]
          (assemble (seq ["// top level comment " "@2 // comment on line" "D=A" "@3"])))))
+
+(deftest assembling-instructions-with-labels-and-variables
+  (is (=
+       ["0000000000010000" "1110111111001000" "0000000000010001" "1110111010001000" "0000000000000110" "1110101010000111" "0000000000010000" "1110101010001000" "0000000000000000" "1110101010000111"]
+       (assemble ["(BEGINING)" "@i" "M=1" "@j" "M=-1" "@TEST" "0;JMP" "(TEST)" "@i" "M=0" "@BEGINING" "0;JMP"]))))

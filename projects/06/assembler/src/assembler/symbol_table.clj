@@ -16,13 +16,26 @@
 
 (defn- generate-symbol-table-from-instructions-recur [instructions instruction-count table]
   (if (= 0 (count instructions)) table
-      (let [label (second (re-matches #"^\((.*)\)$" (first instructions)))]
-        (if (nil? label)
-          (recur (rest instructions) (+ 1 instruction-count) table)
-          (recur (rest instructions) instruction-count (assoc table label (decimal-to-binary instruction-count)))))))
+      (let [label (second (re-matches #"^\((.*)\)$" (first instructions)))
+            variable (second (re-matches #"(@[^0-9]+)$" (first instructions)))]
+        (cond
+          (not (nil? label))
+          (recur (rest instructions) instruction-count (assoc table (str "@" label) (decimal-to-binary instruction-count)))
+
+          (and (not (nil? variable)) (nil? (get table variable)))
+          (recur (rest instructions) (+ 1 instruction-count) (assoc table variable nil))
+
+          :else (recur (rest instructions) (+ 1 instruction-count) table)))))
 
 (defn- generate-symbol-table-from-instructions [instructions]
   (generate-symbol-table-from-instructions-recur instructions 0 {}))
 
+(defn- assign-addresses-to-variables-recur [nil-keys current-count symbol-table]
+  (if (= 0 (count nil-keys)) symbol-table
+    (recur (rest nil-keys) (+ 1 current-count) (assoc symbol-table (first nil-keys) (decimal-to-binary (+ 16 current-count))))))
+
+(defn- assign-addresses-to-variables [symbol-table]
+  (assign-addresses-to-variables-recur (map key (filter #(nil? (val %)) symbol-table)) 0 symbol-table))
+
 (defn generate-symbol-table [instructions]
-  (merge default-symbol-table (generate-symbol-table-from-instructions instructions)))
+  (merge default-symbol-table (assign-addresses-to-variables (generate-symbol-table-from-instructions instructions))))

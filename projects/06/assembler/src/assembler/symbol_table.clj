@@ -8,7 +8,7 @@
 
 (def default-symbol-table
   (merge (ordered-map
-          "@SCREEN" "0000000000000000"
+          "@SCREEN" "0100000000000000"
           "@KDB" "0100000000000000"
           "@SP" "0000000000000000"
           "@ARG" "0000000000000010"

@@ -65,18 +65,23 @@
   {:instruction (str "111" (parse-c-cmp cmp) (parse-c-dest dst) (parse-c-jump jmp))}))
 
 ;; whitespace / label handling
-(defn- instruction-is-not-label-or-comment [instruction]
-  (and (not (-> instruction
-               (str/split #"//")
-               first
-               str/trim
-               str/blank?))
-      (->> instruction
-           (re-matches #"\(.*\)")
-           nil?)))
+(defn- instruction-is-not-comment [instruction]
+  (not (-> instruction
+           (str/split #"//")
+           first
+           str/trim
+           str/blank?)))
 
-(defn- strip-out-comments-and-labels [instructions]
-  (map #(str/trim (first (str/split % #"//"))) (filter instruction-is-not-label-or-comment instructions)))
+(defn- instruction-is-not-label [instruction]
+  (->> instruction
+       (re-matches #"\(.*\)")
+       nil?))
+
+(defn- strip-out-comments-and-whitespace [instructions]
+  (map #(str/trim (first (str/split % #"//"))) (filter instruction-is-not-comment instructions)))
+
+(defn- strip-out-labels [instructions]
+  (filter instruction-is-not-label instructions))
 
 ;; main
 (defn parse-instruction [& {:keys [raw generated-symbol-table]}]
@@ -85,9 +90,10 @@
     (parse-c-instruction raw)))
 
 (defn assemble [instructions]
-  (let [generated-symbol-table (symbol-table/generate-symbol-table instructions)]
+  (let [cleaned-instructions (strip-out-comments-and-whitespace instructions)
+        generated-symbol-table (symbol-table/generate-symbol-table cleaned-instructions)]
     (map #(:instruction (parse-instruction :raw % :generated-symbol-table generated-symbol-table))
-         (strip-out-comments-and-labels instructions))))
+         (strip-out-labels cleaned-instructions))))
 
 (defn -main [file]
   (with-open [rdr (clojure.java.io/reader file)]

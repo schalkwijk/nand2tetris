@@ -3,7 +3,7 @@
             [clojure.test :refer :all]))
 
 (deftest produces-default-symbol-table
-  (is (= "0000000000000000" (get (generate-symbol-table ["@SCREEN"]) "@SCREEN")))
+  (is (= "0100000000000000" (get (generate-symbol-table ["@SCREEN"]) "@SCREEN")))
   (is (= "0100000000000000" (get (generate-symbol-table ["@KDB"]) "@KDB")))
   (is (= "0000000000000000" (get (generate-symbol-table ["@SP"]) "@SP")))
   (is (= "0000000000000010" (get (generate-symbol-table ["@ARG"]) "@ARG")))

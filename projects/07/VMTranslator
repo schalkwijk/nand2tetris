@@ -1,0 +1,2 @@
+#!/bin/bash
+java -Xbootclasspath/a:/Users/slopes/Documents/my_repos/nand2tetris/projects/07/leiningen-2.7.1-standalone.jar -Dfile.encoding=UTF-8 -Dmaven.wagon.http.ssl.easy=false -Dmaven.wagon.rto=10000 -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Dleiningen.original.pwd=/Users/slopes/Documents/my_repos/nand2tetris/projects/07 -classpath :/Users/slopes/Documents/my_repos/nand2tetris/projects/07/leiningen-2.7.1-standalone.jar clojure.main -m leiningen.core.main run $@

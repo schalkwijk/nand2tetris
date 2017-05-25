@@ -4,3 +4,5 @@ VMTranslator:
 
 clean:
 	rm -f VMTranslator
+
+java -jar target/vm-translator-0.1.0-SNAPSHOT-standalone.jar ../MemoryAccess/BasicTest/Ba sicTest.vm

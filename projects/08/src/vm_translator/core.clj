@@ -36,13 +36,13 @@
 
 ;; helpers
 (defn- add-instruction-metadata [asm-instructions]
-  {:instructions (str/join "\n" asm-instructions)
+  {:instructions asm-instructions
    :instruction-count (count asm-instructions)})
 
 (defn- merge-instructions [merged-instruction-metadata current-instruction-metadata]
   (assoc merged-instruction-metadata
          :instruction-count (+ (:instruction-count merged-instruction-metadata) (:instruction-count current-instruction-metadata))
-         :instructions (str (:instructions merged-instruction-metadata) "\n" (:instructions current-instruction-metadata))))
+         :instructions (concat (:instructions merged-instruction-metadata) (:instructions current-instruction-metadata))))
 
 (defn- parse-instruction [instruction merged-instruction-metadata]
   (let [split-args (str/split instruction #" ")]
@@ -67,15 +67,13 @@
 
 (defn translate [instructions filename]
   (let [cleaned-instructions (strip-out-comments-and-whitespace instructions)]
-    (reduce
-     #(merge-instructions %1 (parse-instruction %2 %1))
-     {:filename filename :instruction-count 0 :instructions ""}
-     cleaned-instructions)))
+    (:instructions (reduce
+      #(merge-instructions %1 (parse-instruction %2 %1))
+      {:filename filename :instruction-count 0 :instructions ""}
+      cleaned-instructions))))
 
 ;; main
 (defn -main [file]
   (with-open [rdr (io/reader file)]
     (with-open [wrtr (io/writer (str/replace file ".vm" ".asm"))]
-      (.write wrtr (append-ancillary-functions
-                    (:instructions
-                     (translate (line-seq rdr) (str/replace (.getName (io/file file)) ".vm" ""))))))))
+      (.write wrtr (str/join "\n" (concat (translate (line-seq rdr) (str/replace (.getName (io/file file)) ".vm" "")) ancillary-functions))))))

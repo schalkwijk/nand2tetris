@@ -2,6 +2,7 @@
   (:require [clojure.string :as str] [clojure.java.io :as io]
             [vm-translator.push :refer :all]
             [vm-translator.pop :refer :all]
+            [vm-translator.function :refer :all]
             [vm-translator.ancillary :refer :all])
   (:gen-class))
 
@@ -58,6 +59,8 @@
        "label" (generate-label-command (last split-args))
        "if-goto" (generate-if-goto-command (last split-args))
        "goto" (generate-goto-command (last split-args))
+       "function" (apply generate-function-command (concat (rest split-args) [(:filename merged-instruction-metadata)]))
+       "return" (generate-return-command)
        "eq" (generate-comp-command "EQ_OP" merged-instruction-metadata)
        "gt" (generate-comp-command "GT_OP" merged-instruction-metadata)
        "lt" (generate-comp-command "LT_OP" merged-instruction-metadata)))))

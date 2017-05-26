@@ -39,7 +39,7 @@
     (decorate-instructions
      (case (first split-args)
        "pop" (apply generate-pop-command (rest split-args))
-       "push" (apply generate-push-command (rest split-args))
+       "push" (apply generate-push-command (concat (rest split-args) (:filename merged-instruction-metadata)))
        "add" (generate-two-arg-command "+")
        "sub" (generate-two-arg-command "-")
        "and" (generate-two-arg-command "&")
@@ -50,12 +50,17 @@
        "gt" (generate-comp-command "GT_OP" merged-instruction-metadata)
        "lt" (generate-comp-command "LT_OP" merged-instruction-metadata)))))
 
-;; main
-(defn translate [instructions]
+(defn translate [instructions filename]
   (let [cleaned-instructions (strip-out-comments-and-whitespace instructions)]
-    (reduce #(merge-instructions %1 (parse-instruction %2 %1)) {:instruction-count 0 :instructions ""} cleaned-instructions)))
+    (reduce
+     #(merge-instructions %1 (parse-instruction %2 %1))
+     {:filename filename :instruction-count 0 :instructions ""}
+     cleaned-instructions)))
 
+;; main
 (defn -main [file]
   (with-open [rdr (io/reader file)]
     (with-open [wrtr (io/writer (str/replace file ".vm" ".asm"))]
-      (.write wrtr (append-ancillary-functions (:instructions (translate (line-seq rdr))))))))
+      (.write wrtr (append-ancillary-functions
+                    (:instructions
+                     (translate (line-seq rdr) (str/replace (io/getName file) ".vm" ""))))))))

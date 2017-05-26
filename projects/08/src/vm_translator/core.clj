@@ -24,6 +24,15 @@
 (defn- generate-comp-command [label merged-instruction-metadata]
   [(str "@" (+ (:instruction-count merged-instruction-metadata) 6)) "D=A" "@R13" "M=D" (str "@" label) "0;JMP"])
 
+(defn- generate-label-command [label]
+  [(str "(" label ")")])
+
+(defn- generate-if-goto-command [label]
+  ["@SP" "M=M-1" "A=M" "D=M" (str "@" label) "D;JNE"])
+
+(defn- generate-goto-command [label]
+  [(str "@" label) "0;JMP"])
+
 ;; helpers
 (defn- add-instruction-metadata [asm-instructions]
   {:instructions (str/join "\n" asm-instructions)
@@ -39,13 +48,16 @@
     (add-instruction-metadata
      (case (first split-args)
        "pop" (apply generate-pop-command (rest split-args))
-       "push" (apply generate-push-command (concat (rest split-args) (:filename merged-instruction-metadata)))
+       "push" (apply generate-push-command (concat (rest split-args) [(:filename merged-instruction-metadata)]))
        "add" (generate-two-arg-command "+")
        "sub" (generate-two-arg-command "-")
        "and" (generate-two-arg-command "&")
        "or" (generate-two-arg-command "|")
        "neg" (generate-one-arg-command "-")
        "not" (generate-one-arg-command "!")
+       "label" (generate-label-command (last split-args))
+       "if-goto" (generate-if-goto-command (last split-args))
+       "goto" (generate-goto-command (last split-args))
        "eq" (generate-comp-command "EQ_OP" merged-instruction-metadata)
        "gt" (generate-comp-command "GT_OP" merged-instruction-metadata)
        "lt" (generate-comp-command "LT_OP" merged-instruction-metadata)))))

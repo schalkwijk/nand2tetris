@@ -59,7 +59,7 @@
        "label" (generate-label-command (last split-args))
        "if-goto" (generate-if-goto-command (last split-args))
        "goto" (generate-goto-command (last split-args))
-       "function" (apply generate-function-command (concat (rest split-args) [(:filename merged-instruction-metadata)]))
+       "function" (apply generate-function-command (rest split-args))
        "return" (generate-return-command)
        "eq" (generate-comp-command "EQ_OP" merged-instruction-metadata)
        "gt" (generate-comp-command "GT_OP" merged-instruction-metadata)

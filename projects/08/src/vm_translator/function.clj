@@ -1,9 +1,10 @@
 (ns vm-translator.function
   (:require [clojure.string :as str]))
 
-(defn generate-function-command [function-name number-of-local-args filename]
-  (concat [(str "(" filename "." function-name ")")] (apply concat (repeat (Integer. number-of-local-args) ["@SP" "A=M" "M=0" "@SP" "M=M+1"]))))
+(defn generate-function-command [function-name number-of-local-args]
+  (concat [(str "(" function-name ")")] (apply concat (repeat (Integer. number-of-local-args) ["@SP" "A=M" "M=0" "@SP" "M=M+1"]))))
 
+;; return command
 (defn- restore-memory-segment [segment offset]
   [(str "@" offset) "D=A" "@R14" "A=M-D" "D=M" (str "@" segment) "M=D"])
 

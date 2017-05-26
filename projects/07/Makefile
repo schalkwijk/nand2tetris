@@ -3,4 +3,18 @@ VMTranslator:
 	chmod +x VMTranslator
 
 clean:
-	rm -f VMTranslator
+	rm -f VMTranslator; rm -f project7.zip; rm -f vm-translator-0.1.0-SNAPSHOT-standalone.jar
+
+uberjar:
+	lein uberjar && cp target/vm-translator-0.1.0-SNAPSHOT-standalone.jar .
+
+compile-all:
+	find . -name "*.vm" -exec ./VMTranslator \{\} \;
+
+test-all:
+	cd ../../tools/ && find ../projects/07/ -name "*.tst" -and -not -name "*VME*" -exec ./CPUEmulator.sh \{\} \;
+
+zip:
+	zip project7.zip Makefile project.clj vm-translator-0.1.0-SNAPSHOT-standalone.jar
+
+all: clean uberjar VMTranslator compile-all test-all zip

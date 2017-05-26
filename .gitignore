@@ -8,3 +8,4 @@
 .nrepl-port
 VMTranslator
 vm-translator*
+*projects/07/**/*.asm

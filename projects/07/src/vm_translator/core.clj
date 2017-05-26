@@ -25,6 +25,9 @@
 (defn- generate-static-push-command [location]
   [(str "@Foo." location) "D=M" "@SP" "A=M" "M=D" "@SP" "M=M+1"])
 
+(defn- generate-pointer-push-command [location]
+  [(str "@" (if (= location "0") "THIS" "THAT")) "D=M" "@SP" "A=M" "M=D" "@SP" "M=M+1"])
+
 (defn- generate-push-command [memory-segment location]
   (case memory-segment
     "constant" (generate-constant-push-command location)
@@ -33,6 +36,7 @@
     "this" (generate-relative-push-command "THIS" location)
     "that" (generate-relative-push-command "THAT" location)
     "static" (generate-static-push-command location)
+    "pointer" (generate-pointer-push-command location)
     "temp" (generate-temp-push-command location)))
 
 ;; pop commands
@@ -45,6 +49,9 @@
 (defn- generate-static-pop-command [location]
   ["@SP" "A=M-1" "D=M" (str "@Foo." location) "M=D" "@SP" "M=M-1"])
 
+(defn- generate-pointer-pop-command [location]
+  ["@SP" "M=M-1" "A=M" "D=M" (str "@" (if (= location "0") "THIS" "THAT")) "M=D"])
+
 (defn- generate-pop-command [memory-segment location]
   (case memory-segment
     "local" (generate-relative-pop-command "LCL" location)
@@ -52,6 +59,7 @@
     "this" (generate-relative-pop-command "THIS" location)
     "that" (generate-relative-pop-command "THAT" location)
     "static" (generate-static-pop-command location)
+    "pointer" (generate-pointer-pop-command location)
     "temp" (generate-temp-pop-command location)))
 
 (defn- generate-two-arg-command [operand]

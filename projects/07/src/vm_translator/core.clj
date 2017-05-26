@@ -1,5 +1,8 @@
 (ns vm-translator.core
-  (:require [clojure.string :as str] [clojure.java.io :as io])
+  (:require [clojure.string :as str] [clojure.java.io :as io]
+            [vm-translator.push :refer :all]
+            [vm-translator.pop :refer :all]
+            [vm-translator.ancillary :refer :all])
   (:gen-class))
 
 (defn- instruction-is-not-comment [instruction]
@@ -12,63 +15,12 @@
 (defn- strip-out-comments-and-whitespace [instructions]
   (map #(str/trim (first (str/split % #"//"))) (filter instruction-is-not-comment instructions)))
 
-;; push commands
-(defn- generate-constant-push-command [value]
-  [(str "@" value ) "D=A" "@SP" "A=M" "M=D" "@SP" "M=M+1"])
-
-(defn- generate-relative-push-command [base-address location]
-  [(str "@" base-address ) "D=M" (str "@" location) "D=D+A" "A=D" "D=M" "@SP" "A=M" "M=D" "D=A+1" "@SP" "M=D"])
-
-(defn- generate-temp-push-command [location]
-  ["@R5" "D=A" (str "@" location) "D=D+A" "A=D" "D=M" "@SP" "A=M" "M=D" "D=A+1" "@SP" "M=D"])
-
-(defn- generate-static-push-command [location]
-  [(str "@Foo." location) "D=M" "@SP" "A=M" "M=D" "@SP" "M=M+1"])
-
-(defn- generate-pointer-push-command [location]
-  [(str "@" (if (= location "0") "THIS" "THAT")) "D=M" "@SP" "A=M" "M=D" "@SP" "M=M+1"])
-
-(defn- generate-push-command [memory-segment location]
-  (case memory-segment
-    "constant" (generate-constant-push-command location)
-    "local" (generate-relative-push-command "LCL" location)
-    "argument" (generate-relative-push-command "ARG" location)
-    "this" (generate-relative-push-command "THIS" location)
-    "that" (generate-relative-push-command "THAT" location)
-    "static" (generate-static-push-command location)
-    "pointer" (generate-pointer-push-command location)
-    "temp" (generate-temp-push-command location)))
-
-;; pop commands
-(defn- generate-relative-pop-command [base-address location]
-  ["@SP" "M=M-1" (str "@" base-address) "D=M" (str "@" location) "D=D+A" "@R13" "M=D" "@SP" "A=M" "D=M" "@R13" "A=M" "M=D"])
-
-(defn- generate-temp-pop-command [location]
-  ["@SP" "M=M-1" "@R5" "D=A" (str "@" location) "D=D+A" "@R13" "M=D" "@SP" "A=M" "D=M" "@R13" "A=M" "M=D"])
-
-(defn- generate-static-pop-command [location]
-  ["@SP" "A=M-1" "D=M" (str "@Foo." location) "M=D" "@SP" "M=M-1"])
-
-(defn- generate-pointer-pop-command [location]
-  ["@SP" "M=M-1" "A=M" "D=M" (str "@" (if (= location "0") "THIS" "THAT")) "M=D"])
-
-(defn- generate-pop-command [memory-segment location]
-  (case memory-segment
-    "local" (generate-relative-pop-command "LCL" location)
-    "argument" (generate-relative-pop-command "ARG" location)
-    "this" (generate-relative-pop-command "THIS" location)
-    "that" (generate-relative-pop-command "THAT" location)
-    "static" (generate-static-pop-command location)
-    "pointer" (generate-pointer-pop-command location)
-    "temp" (generate-temp-pop-command location)))
-
 (defn- generate-two-arg-command [operand]
   ["@SP" "A=M-1" "D=M" "A=A-1" "A=M" (str "D=A" operand "D") "@SP" "A=M" "A=A-1" "A=A-1" "M=D" "D=A+1" "@SP" "M=D"])
 
 (defn- generate-one-arg-command [operand]
   ["@SP" "A=M-1" "D=M" (str "D=" operand "D") "M=D"])
 
-;; eq command
 (defn- generate-comp-command [label merged-instruction-metadata]
   [(str "@" (+ (:instruction-count merged-instruction-metadata) 6)) "D=A" "@R13" "M=D" (str "@" label) "0;JMP"])
 
@@ -98,28 +50,6 @@
        "gt" (generate-comp-command "GT_OP" merged-instruction-metadata)
        "lt" (generate-comp-command "LT_OP" merged-instruction-metadata)))))
 
-;; ancillary functions
-(defn- construct-comp-function [label jump-condition]
-  (str/join "\n" [(str "(" label ")") "@SP" "A=M-1" "D=M" "A=A-1" "A=M" "D=A-D" "@OP_FINISHED_TRUE" (str "D;" jump-condition) "D=0" "@OP_FINISHED_FALSE" "0;JMP"]))
-
-(def terminal-loop
-  (str/join "\n" ["// terminal loop" "(END)" "@END" "0;JMP"]))
-
-(def op-success
-  (str/join "\n" ["(OP_FINISHED_TRUE)" "D=-1" "(OP_FINISHED_FALSE)" "@SP" "A=M" "A=A-1" "A=A-1" "M=D" "D=A+1" "@SP" "M=D" "@R13" "A=M" "0;JMP"]))
-
-(def eq-function
-  (construct-comp-function "EQ_OP" "JEQ"))
-
-(def lt-function
-  (construct-comp-function "LT_OP" "JLT"))
-
-(def gt-function
-  (construct-comp-function "GT_OP" "JGT"))
-
-(defn- append-ancillary-functions [instructions]
-  (str/join "\n" [instructions "// ancillary" terminal-loop eq-function lt-function gt-function op-success]))
-
 ;; main
 (defn translate [instructions]
   (let [cleaned-instructions (strip-out-comments-and-whitespace instructions)]
@@ -129,7 +59,3 @@
   (with-open [rdr (io/reader file)]
     (with-open [wrtr (io/writer (str/replace file ".vm" ".asm"))]
       (.write wrtr (append-ancillary-functions (:instructions (translate (line-seq rdr))))))))
-
-;; todo
-;; neg
-;; not

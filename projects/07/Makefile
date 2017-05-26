@@ -3,7 +3,7 @@ VMTranslator:
 	chmod +x VMTranslator
 
 clean:
-	rm -f VMTranslator; rm -f project7.zip; rm -f vm-translator-0.1.0-SNAPSHOT-standalone.jar
+	rm -f VMTranslator; rm -f project7.zip; rm -f vm-translator-0.1.0-SNAPSHOT-standalone.jar; rm -rf target
 
 uberjar:
 	lein uberjar && cp target/vm-translator-0.1.0-SNAPSHOT-standalone.jar .

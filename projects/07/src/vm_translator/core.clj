@@ -14,13 +14,13 @@
 
 ;; push commands
 (defn- generate-constant-push-command [value]
-  (str/join "\n" [(str "@" value ) "D=A" "@SP" "A=M" "M=D" "@SP" "M=M+1"]))
+  [(str "@" value ) "D=A" "@SP" "A=M" "M=D" "@SP" "M=M+1"])
 
 (defn- generate-relative-push-command [base-address location]
-  (str/join "\n" [(str "@" base-address ) "D=M" (str "@" location) "D=D+A" "A=D" "D=M" "@SP" "A=M" "M=D" "D=A+1" "@SP" "M=D"]))
+  [(str "@" base-address ) "D=M" (str "@" location) "D=D+A" "A=D" "D=M" "@SP" "A=M" "M=D" "D=A+1" "@SP" "M=D"])
 
 (defn- generate-temp-push-command [location]
-  (str/join "\n" ["@R5" "D=A" (str "@" location) "D=D+A" "A=D" "D=M" "@SP" "A=M" "M=D" "D=A+1" "@SP" "M=D"]))
+  ["@R5" "D=A" (str "@" location) "D=D+A" "A=D" "D=M" "@SP" "A=M" "M=D" "D=A+1" "@SP" "M=D"])
 
 (defn- generate-push-command [memory-segment location]
   (case memory-segment
@@ -33,10 +33,10 @@
 
 ;; pop commands
 (defn- generate-relative-pop-command [base-address location]
-  (str/join "\n" ["@SP" "M=M-1" (str "@" base-address) "D=M" (str "@" location) "D=D+A" "@R13" "M=D" "@SP" "A=M" "D=M" "@R13" "A=M" "M=D"]))
+  ["@SP" "M=M-1" (str "@" base-address) "D=M" (str "@" location) "D=D+A" "@R13" "M=D" "@SP" "A=M" "D=M" "@R13" "A=M" "M=D"])
 
 (defn- generate-temp-pop-command [location]
-  (str/join "\n" ["@SP" "M=M-1" "@R5" "D=A" (str "@" location) "D=D+A" "@R13" "M=D" "@SP" "A=M" "D=M" "@R13" "A=M" "M=D"]))
+  ["@SP" "M=M-1" "@R5" "D=A" (str "@" location) "D=D+A" "@R13" "M=D" "@SP" "A=M" "D=M" "@R13" "A=M" "M=D"])
 
 (defn- generate-pop-command [memory-segment location]
   (case memory-segment
@@ -47,22 +47,42 @@
     "temp" (generate-temp-pop-command location)))
 
 (defn- generate-add-sub-command [operand]
-  (str/join "\n" ["@SP" "A=M-1" "D=M" "A=A-1" "A=M" (str "D=A" operand "D") "@SP" "A=M" "A=A-1" "A=A-1" "M=D" "D=A+1" "@SP" "M=D"]))
+  ["@SP" "A=M-1" "D=M" "A=A-1" "A=M" (str "D=A" operand "D") "@SP" "A=M" "A=A-1" "A=A-1" "M=D" "D=A+1" "@SP" "M=D"])
 
-(defn- parse-instruction [instruction]
+;; helpers
+(defn- decorate-instructions [asm-instructions]
+  {:instructions (str/join "\n" asm-instructions)
+   :instruction-count (count asm-instructions)})
+
+(defn- merge-instructions [merged-instruction-metadata current-instruction-metadata]
+  (assoc merged-instruction-metadata
+         :instruction-count (+ (:instruction-count merged-instruction-metadata) (:instruction-count current-instruction-metadata))
+         :instructions (str (:instructions merged-instruction-metadata) "\n" (:instructions current-instruction-metadata))))
+
+(defn- parse-instruction [instruction merged-instruction-metadata]
   (let [split-args (str/split instruction #" ")]
-        (case (first split-args)
-          "pop" (apply generate-pop-command (rest split-args))
-          "push" (apply generate-push-command (rest split-args))
-          "add" (generate-add-sub-command "+")
-          "sub" (generate-add-sub-command "-"))))
+    (decorate-instructions
+     (case (first split-args)
+       "pop" (apply generate-pop-command (rest split-args))
+       "push" (apply generate-push-command (rest split-args))
+       "add" (generate-add-sub-command "+")
+       "sub" (generate-add-sub-command "-")))))
 
 ;; main
 (defn translate [instructions]
   (let [cleaned-instructions (strip-out-comments-and-whitespace instructions)]
-    (map #(parse-instruction %) cleaned-instructions)))
+    (reduce #(merge-instructions %1 (parse-instruction %2 %1)) {:instruction-count 0 :instructions ""} cleaned-instructions)))
 
 (defn -main [file]
   (with-open [rdr (io/reader file)]
     (with-open [wrtr (io/writer (str/replace file ".vm" ".asm"))]
-      (dorun (map #(.write wrtr (str % "\n")) (translate (line-seq rdr)))))))
+      (.write wrtr (:instructions (translate (line-seq rdr)))))))
+
+;; todo
+;; eq
+;; lt
+;; gt
+;; and
+;; or
+;; neg
+;; not

@@ -72,14 +72,17 @@
       cleaned-instructions))))
 
 ;; main
-(defn- translate-instructions-into-file [wrtr rdr filename-without-extension]
-  (.write wrtr (str/join "\n" (translate (line-seq rdr) filename-without-extension))))
+(defn- write-instructions-to-file [instructions wrtr]
+  (.write wrtr (str/join "\n" instructions)))
+
+(defn- translate-single-file [file wrtr]
+  (let [filename-without-extension (str/replace (.getName file) ".vm" "")]
+    (with-open [rdr (io/reader file)]
+      (write-instructions-to-file (translate (line-seq rdr) filename-without-extension) wrtr))))
 
 (defn -main [filename]
   (let [file (io/file filename)
-        filename-without-extension (str/replace (.getName file) ".vm" "")
         output-filename (str/replace filename ".vm" ".asm")]
     (with-open [wrtr (io/writer output-filename)]
-      (with-open [rdr (io/reader file)]
-        (translate-instructions-into-file wrtr rdr filename-without-extension)
-        (.write wrtr (str/join "\n" (conj ancillary-functions "\n")))))))
+      (translate-single-file file wrtr)
+      (write-instructions-to-file (conj ancillary-functions "\n") wrtr))))

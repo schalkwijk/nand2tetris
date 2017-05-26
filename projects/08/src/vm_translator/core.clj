@@ -48,7 +48,7 @@
   (let [split-args (str/split instruction #" ")]
     (add-instruction-metadata
      (case (first split-args)
-       "pop" (apply generate-pop-command (rest split-args))
+       "pop" (apply generate-pop-command (concat (rest split-args) [(:filename merged-instruction-metadata)]))
        "push" (apply generate-push-command (concat (rest split-args) [(:filename merged-instruction-metadata)]))
        "add" (generate-two-arg-command "+")
        "sub" (generate-two-arg-command "-")

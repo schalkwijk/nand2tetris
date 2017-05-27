@@ -3,6 +3,7 @@
             [vm-translator.push :refer :all]
             [vm-translator.pop :refer :all]
             [vm-translator.function :refer :all]
+            [vm-translator.startup :refer :all]
             [vm-translator.ancillary :refer :all])
   (:gen-class))
 
@@ -23,7 +24,9 @@
   ["@SP" "A=M-1" "D=M" (str "D=" operand "D") "M=D"])
 
 (defn- generate-comp-command [label merged-instruction-metadata]
-  [(str "@" (+ (:instruction-count merged-instruction-metadata) 6)) "D=A" "@R13" "M=D" (str "@" label) "0;JMP"])
+  (let [instruction-count (:instruction-count merged-instruction-metadata)]
+    [(str "@comp-reentry-point." instruction-count) "D=A" "@R13" "M=D" (str "@" label) "0;JMP"
+     (str "(comp-reentry-point." instruction-count ")")]))
 
 (defn- generate-label-command [label]
   [(str "(" label ")")])
@@ -43,6 +46,7 @@
          :instruction-count (+ (:instruction-count merged-instruction-metadata) (:instruction-count current-instruction-metadata))
          :instructions (concat (:instructions merged-instruction-metadata) (:instructions current-instruction-metadata))))
 
+;; tokenizer
 (defn- parse-instruction [instruction merged-instruction-metadata]
   (let [split-args (str/split instruction #" ")]
     (add-instruction-metadata
@@ -59,29 +63,32 @@
        "if-goto" (generate-if-goto-command (last split-args))
        "goto" (generate-goto-command (last split-args))
        "function" (apply generate-function-command (rest split-args))
+       "call" (apply generate-call-command (concat (rest split-args) [(:instruction-count merged-instruction-metadata)]))
        "return" (generate-return-command)
        "eq" (generate-comp-command "EQ_OP" merged-instruction-metadata)
        "gt" (generate-comp-command "GT_OP" merged-instruction-metadata)
        "lt" (generate-comp-command "LT_OP" merged-instruction-metadata)))))
 
-(defn translate [instructions filename]
-  (let [cleaned-instructions (strip-out-comments-and-whitespace instructions)]
-    (:instructions (reduce
-      #(merge-instructions %1 (parse-instruction %2 %1))
-      {:filename filename :instruction-count 0 :instructions ""}
-      cleaned-instructions))))
+;; file helpers
+(defn- write-instructions-to-file [instructions wrtr]
+  (.write wrtr (str "\n" (str/join "\n" instructions))))
+
+(defn- extract-asm-files-from-directory [directory]
+  (filter #(re-matches #".*\.vm" (.getName %)) (.listFiles directory)))
 
 ;; main
-(defn- write-instructions-to-file [instructions wrtr]
-  (.write wrtr (str/join "\n" instructions)))
+(defn- translate [instructions filename]
+  (let [cleaned-instructions (strip-out-comments-and-whitespace instructions)]
+    (:instructions (reduce
+                    #(merge-instructions %1 (parse-instruction %2 %1))
+                    {:filename filename :instruction-count 0 :instructions ""}
+                    cleaned-instructions))))
 
 (defn- translate-single-file [file wrtr]
   (let [filename-without-extension (str/replace (.getName file) ".vm" "")]
     (with-open [rdr (io/reader file)]
       (write-instructions-to-file (translate (line-seq rdr) filename-without-extension) wrtr))))
 
-(defn- extract-asm-files-from-directory [directory]
-  (filter #(re-matches #".*\.vm" (.getName %)) (.listFiles directory)))
 
 (defn -main [filename]
   (let [file (io/file filename)
@@ -89,5 +96,6 @@
         files (if directory? (extract-asm-files-from-directory file) [file])
         output-filename (if directory? (str filename "/" (.getName file) ".asm") (str/replace filename ".vm" ".asm"))]
     (with-open [wrtr (io/writer output-filename)]
+      (if directory? (write-instructions-to-file startup-code wrtr))
       (doall (map #(translate-single-file % wrtr) files))
-      (write-instructions-to-file (conj ancillary-functions "\n") wrtr))))
+      (write-instructions-to-file ancillary-functions wrtr))))

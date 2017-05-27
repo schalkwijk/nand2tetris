@@ -96,6 +96,6 @@
         files (if directory? (extract-asm-files-from-directory file) [file])
         output-filename (if directory? (str filename "/" (.getName file) ".asm") (str/replace filename ".vm" ".asm"))]
     (with-open [wrtr (io/writer output-filename)]
-      (if directory? (write-instructions-to-file startup-code wrtr))
+      (if directory? (write-instructions-to-file (concat startup-code (translate ["call Sys.init 0"] filename)) wrtr))
       (doall (map #(translate-single-file % wrtr) files))
       (write-instructions-to-file ancillary-functions wrtr))))

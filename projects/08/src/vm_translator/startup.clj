@@ -9,5 +9,4 @@
    (assign-number-to-segment 300 "LCL")
    (assign-number-to-segment 400 "ARG")
    (assign-number-to-segment 3000 "THIS")
-   (assign-number-to-segment 3010 "THAT")
-   ["@Sys.init" "0;JMP"]))
+   (assign-number-to-segment 3010 "THAT")))

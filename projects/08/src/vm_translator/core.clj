@@ -7,10 +7,13 @@
             [vm-translator.ancillary :refer :all])
   (:gen-class))
 
+(defn- first-or-empty [instruction]
+  (if (empty? instruction) "" (first instruction)))
+
 (defn- instruction-is-not-comment [instruction]
   (not (-> instruction
            (str/split #"//")
-           first
+           first-or-empty
            str/trim
            str/blank?)))
 

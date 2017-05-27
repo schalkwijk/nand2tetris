@@ -12,9 +12,11 @@ uberjar:
 	lein uberjar && cp target/$(jar) .
 
 compile-all:
+	find ../07 -name "*.vm" -exec ./VMTranslator \{\} \;
 	find . -name "*.vm" -exec ./VMTranslator \{\} \;
 
 test-all:
+	cd ../../tools/ && find ../projects/07/ -name "*.tst" -and -not -name "*VME*" -exec ./CPUEmulator.sh \{\} \;
 	cd ../../tools/ && find ../projects/0$(project)/ -name "*.tst" -and -not -name "*VME*" -exec ./CPUEmulator.sh \{\} \;
 
 zip:

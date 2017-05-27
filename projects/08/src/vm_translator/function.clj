@@ -17,7 +17,7 @@
           (restore-memory-segment "ARG" "3")
           (restore-memory-segment "THIS" "2")
           (restore-memory-segment "THAT" "1")
-          ["@5" "D=A" "@R14" "A=M-D" "A=M" "0;JMP"]))
+          ["@R13" "A=M" "0;JMP"]))
 
 ;; call command
 (def increment-stack-pointer ["@SP" "M=M+1"])

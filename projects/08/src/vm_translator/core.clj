@@ -78,7 +78,6 @@
 (defn- translate-single-file [file wrtr]
   (let [filename-without-extension (str/replace (.getName file) ".vm" "")]
     (with-open [rdr (io/reader file)]
-      (println (str "Translating " filename-without-extension))
       (write-instructions-to-file (translate (line-seq rdr) filename-without-extension) wrtr))))
 
 (defn- extract-asm-files-from-directory [directory]
@@ -88,7 +87,7 @@
   (let [file (io/file filename)
         directory? (.isDirectory file)
         files (if directory? (extract-asm-files-from-directory file) [file])
-        output-filename (if directory? (str filename ".asm") (str/replace filename ".vm" ".asm"))]
+        output-filename (if directory? (str filename "/" (.getName file) ".asm") (str/replace filename ".vm" ".asm"))]
     (with-open [wrtr (io/writer output-filename)]
       (doall (map #(translate-single-file % wrtr) files))
       (write-instructions-to-file (conj ancillary-functions "\n") wrtr))))

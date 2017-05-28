@@ -1,0 +1,43 @@
+class GameOfLifeEngine {
+
+  field Cursor cursor;
+
+  constructor GameOfLifeEngine new() {
+    let cursor = Cursor.new();
+    return this;
+  }
+
+  method void run() {
+    var char key;
+    var boolean exit;
+    let exit = false;
+
+    do cursor.move(0);
+
+    while (~exit) {
+      while ((key = 0) & (~exit)) {
+        let key = Keyboard.keyPressed();
+        do Sys.wait(50);
+      }
+
+      if(key = 81) { let exit = true; }// exit 
+      
+      while ((~(key = 0)) & (~exit)) {
+        let key = Keyboard.keyPressed();
+        if((key > 129) & (key < 134)) {
+          do cursor.move(key - 130);
+        }
+        do Sys.wait(50);
+      }
+    }
+
+    do cursor.dispose();
+    return;
+  }
+
+  method void dispose() {
+    do cursor.dispose();
+    return;
+  }
+
+}

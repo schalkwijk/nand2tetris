@@ -1,0 +1,49 @@
+class Cursor {
+
+  field int row;
+  field int col;
+
+  constructor Cursor new() {
+    let row = 0;
+    let col = 0;
+    return this;
+  }
+
+  method void move(int direction) {
+    do Screen.setColor(false);
+    do Screen.drawRectangle(col * 16, row * 16, col * 16 + 15, row * 16 + 15);
+
+    if (direction = 0) { // move left
+      if((col - 1) > -1) { let col = col - 1; }
+    } else {
+      if (direction = 1) { // move up
+        if((row - 1) > -1) { let row = row - 1; }
+      } else {
+        if (direction = 2) { // move right
+          if((col + 1) < 32) { let col = col + 1; }
+        } else { // move down
+          if((row + 1) < 16) { let row = row + 1; }
+        }
+      }
+    }
+
+    do Screen.setColor(true);
+    do Screen.drawRectangle(col * 16, row * 16, col * 16 + 15, row * 16 + 15);
+
+    return;
+  }
+
+  method int getRow() {
+    return row;
+  }
+
+  method int getCol() {
+    return col;
+  }
+
+  method void dispose() {
+    do Memory.deAlloc(this);
+    return;
+  }
+
+}

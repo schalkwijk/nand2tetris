@@ -1,0 +1,9 @@
+class Main {
+  function void main() {
+    var GameOfLifeEngine golEngine;
+    let golEngine = GameOfLifeEngine.new();
+    do golEngine.run();
+    do golEngine.dispose();
+    return;
+  }
+}

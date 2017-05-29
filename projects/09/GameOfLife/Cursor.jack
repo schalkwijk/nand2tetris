@@ -2,10 +2,16 @@ class Cursor {
 
   field int row;
   field int col;
+  field int rowCount;
+  field int colCount;
 
-  constructor Cursor new() {
+  constructor Cursor new(int rc, int cc) {
     let row = 0;
     let col = 0;
+
+    let rowCount = rc;
+    let colCount = cc;
+
     return this;
   }
 
@@ -20,9 +26,9 @@ class Cursor {
           if((row - 1) > -1) { let row = row - 1; }
       } else {
         if (direction = 2) { // move right
-            if((col + 1) < 32) { let col = col + 1; }
+            if((col + 1) < colCount) { let col = col + 1; }
         } else { // move down
-            if((row + 1) < 16) { let row = row + 1; }
+            if((row + 1) < rowCount) { let row = row + 1; }
         }
       }
     }

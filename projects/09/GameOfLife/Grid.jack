@@ -1,0 +1,63 @@
+class Grid {
+
+  field Array grid;
+  field int rowCount;
+  field int colCount;
+
+  constructor Grid new(int rc, int cc) {
+    let rowCount = rc;
+    let colCount = cc;
+    let grid = Array.new(colCount);
+
+    do initialize();
+    return this;
+  }
+
+  method void initialize() {
+    var int scratchColCount;
+    var int scratchRowCount;
+    var Array rowArray;
+
+    let scratchColCount = colCount;
+    while(~(scratchColCount = 0)) {
+      let scratchRowCount = rowCount;
+      let rowArray = Array.new(rowCount);
+      let grid[scratchColCount - 1] = rowArray;
+      while(~(scratchRowCount = 0)) {
+       let rowArray[scratchRowCount - 1] = Square.new();
+       let scratchRowCount = scratchRowCount - 1;
+      }
+      let scratchColCount = scratchColCount - 1;
+    }
+
+    return;
+  }
+
+  method void toggle(int row, int col) {
+    var Square curSquare;
+    var boolean curSquareIsAlive;
+    var Array curCol;
+
+    let curCol = grid[col];
+    let curSquare = curCol[row];
+
+    // do curSquare.toggle(); */
+
+    // let curSquareIsAlive = curSquare.alive(); */
+    // if(curSquareIsAlive) { */
+    //   do Screen.setColor(true); */
+    //   do Screen.drawRectangle(col * 16, row * 16, col * 16 + 15, row * 16 + 15); */
+    // } else { */
+    //   do Screen.setColor(false); */
+    //   do Screen.drawRectangle(col * 16, row * 16, col * 16 + 15, row * 16 + 15); */
+    // } */
+
+    return;
+  }
+
+  method void dispose() {
+    do Memory.deAlloc(this);
+    return;
+  }
+
+}

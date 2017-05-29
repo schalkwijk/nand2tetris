@@ -1,14 +1,22 @@
 class GameOfLifeEngine {
 
   field Cursor cursor;
+  field Grid grid;
+  field int rowCount;
+  field int colCount;
 
   constructor GameOfLifeEngine new() {
-    let cursor = Cursor.new();
+    let rowCount = 16;
+    let colCount = 32;
+    let cursor = Cursor.new(rowCount, colCount);
+    let grid = Grid.new(rowCount, colCount);
     return this;
   }
 
   method void run() {
     var char key;
+    var int curRow;
+    var int curCol;
     var boolean exit;
     let exit = false;
 
@@ -20,12 +28,18 @@ class GameOfLifeEngine {
         do Sys.wait(50);
       }
 
-      if(key = 81) { let exit = true; }// exit
+      if(key = 81) { let exit = true; } // exit
 
       while ((~(key = 0)) & (~exit)) {
         let key = Keyboard.keyPressed();
         if((key > 129) & (key < 134)) {
           do cursor.move(key - 130);
+        } else {
+          if(key = 129) {
+            let curRow = cursor.getRow();
+            let curCol = cursor.getCol();
+            do grid.toggle(curRow, curCol);
+          }
         }
         do Sys.wait(50);
       }

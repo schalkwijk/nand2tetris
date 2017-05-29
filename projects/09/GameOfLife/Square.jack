@@ -1,0 +1,27 @@
+class Square {
+
+  field boolean alive;
+
+  constructor Square new() {
+    let alive = false;
+    return this;
+  }
+
+  method boolean alive() {
+    return alive;
+  }
+
+  method void toggle() {
+    if(alive) {
+      let alive = false;
+    } else {
+      let alive = true;
+    }
+    return;
+  }
+
+  method void dispose() {
+    do Memory.deAlloc(this);
+    return;
+  }
+}

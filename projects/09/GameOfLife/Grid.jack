@@ -41,16 +41,39 @@ class Grid {
     let curCol = grid[col];
     let curSquare = curCol[row];
 
-    // do curSquare.toggle(); */
+    do curSquare.toggle();
 
-    // let curSquareIsAlive = curSquare.alive(); */
-    // if(curSquareIsAlive) { */
-    //   do Screen.setColor(true); */
-    //   do Screen.drawRectangle(col * 16, row * 16, col * 16 + 15, row * 16 + 15); */
-    // } else { */
-    //   do Screen.setColor(false); */
-    //   do Screen.drawRectangle(col * 16, row * 16, col * 16 + 15, row * 16 + 15); */
-    // } */
+    return;
+  }
+
+  method void draw() {
+    var int scratchColCount;
+    var int scratchRowCount;
+    var Array rowArray;
+    var Array curCol;
+    var Square curSquare;
+
+    let scratchColCount = colCount;
+
+    while(~(scratchColCount = 0)) {
+      let scratchColCount = scratchColCount - 1;
+      let scratchRowCount = rowCount;
+      let rowArray = grid[scratchColCount - 1];
+
+      while(~(scratchRowCount = 0)) {
+        let scratchRowCount = scratchRowCount - 1;
+        let curCol = grid[scratchColCount];
+        let curSquare = curCol[scratchRowCount];
+
+        if(curSquare.alive()) {
+          do Screen.setColor(true);
+          do Screen.drawRectangle(scratchColCount * 16, scratchRowCount * 16, scratchColCount * 16 + 15, scratchRowCount * 16 + 15);
+          } else {
+          do Screen.setColor(false);
+          do Screen.drawRectangle(scratchColCount * 16, scratchRowCount * 16, scratchColCount * 16 + 15, scratchRowCount * 16 + 15);
+        }
+      }
+    }
 
     return;
   }

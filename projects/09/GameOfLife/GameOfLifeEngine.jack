@@ -25,12 +25,13 @@ class GameOfLifeEngine {
     while (~exit) {
       while ((key = 0) & (~exit)) {
         let key = Keyboard.keyPressed();
-        do Sys.wait(50);
       }
 
       if(key = 81) { let exit = true; } // exit
 
       while ((~(key = 0)) & (~exit)) {
+        do grid.draw();
+        do cursor.draw();
         let key = Keyboard.keyPressed();
         if((key > 129) & (key < 134)) {
           do cursor.move(key - 130);
@@ -41,7 +42,6 @@ class GameOfLifeEngine {
             do grid.toggle(curRow, curCol);
           }
         }
-        do Sys.wait(50);
       }
     }
 

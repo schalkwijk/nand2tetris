@@ -33,9 +33,14 @@ class Cursor {
       }
     }
 
+    do draw();
+
+    return;
+  }
+
+  method void draw() {
     do Screen.setColor(true);
     do Screen.drawRectangle(col * 16, row * 16, col * 16 + 15, row * 16 + 15);
-
     return;
   }
 

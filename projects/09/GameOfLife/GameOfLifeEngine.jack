@@ -4,12 +4,14 @@ class GameOfLifeEngine {
   field Grid grid;
   field int rowCount;
   field int colCount;
+  field GridPainter gridPainter;
 
   constructor GameOfLifeEngine new() {
     let rowCount = 16;
     let colCount = 32;
     let cursor = Cursor.new(rowCount, colCount);
-    let grid = Grid.new(rowCount, colCount);
+    let gridPainter = GridPainter.new(cursor);
+    let grid = Grid.new(rowCount, colCount, gridPainter);
     return this;
   }
 
@@ -25,7 +27,7 @@ class GameOfLifeEngine {
     let exit = false;
     let inSimulation = false;
 
-    do cursor.move(0, grid);
+    do cursor.move(0);
 
     while (~exit) {
       while ((key = 0) & (~exit)) {
@@ -37,14 +39,15 @@ class GameOfLifeEngine {
 
       while ((~(key = 0)) & (~exit) & ~(inSimulation)) {
         if((key > 129) & (key < 134)) {
-          do cursor.move(key - 130, grid);
+          do clearCursor();
+          do cursor.move(key - 130);
+          do drawCursor();
           do Sys.wait(60);
         } else {
           if(key = 129 & ~(previousKey = 129)) {
             let curRow = cursor.getRow();
             let curCol = cursor.getCol();
             do grid.toggle(curRow, curCol);
-            do cursor.draw();
             do Sys.wait(30);
           } else {
             if(key = 67) {
@@ -61,14 +64,39 @@ class GameOfLifeEngine {
         let newGrid = grid.tick();
         do grid.dispose();
         let grid = newGrid;
+        let key = Keyboard.keyPressed();
       }
-
-      let previousKey = key;
-      let key = Keyboard.keyPressed();
     }
 
     do cursor.dispose();
     do grid.dispose();
+    return;
+  }
+
+  method void clearCursor() {
+    var int row;
+    var int col;
+    var boolean squareIsAlive;
+
+    let row = cursor.getRow();
+    let col = cursor.getCol();
+    let squareIsAlive = grid.alive(row, col);
+
+    if(~squareIsAlive) {
+      do gridPainter.paintSquare(false, row, col);
+    }
+
+    return;
+  }
+
+  method void drawCursor() {
+    var int row;
+    var int col;
+
+    let row = cursor.getRow();
+    let col = cursor.getCol();
+
+    do gridPainter.drawSquare(row, col);
     return;
   }
 

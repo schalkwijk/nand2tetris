@@ -3,11 +3,13 @@ class Grid {
   field Array grid;
   field int rowCount;
   field int colCount;
+  field GridPainter gridPainter;
 
-  constructor Grid new(int rc, int cc) {
+  constructor Grid new(int rc, int cc, GridPainter painter) {
     let rowCount = rc;
     let colCount = cc;
     let grid = Array.new(colCount);
+    let gridPainter = painter;
 
     do initialize();
     return this;
@@ -38,7 +40,11 @@ class Grid {
     let curSquare = getSquare(row, col);
 
     do curSquare.toggle();
-    do paintSquare(curSquare.alive(), row, col);
+    if(curSquare.alive()) {
+      do gridPainter.drawSquare(row, col);
+    } else {
+      do gridPainter.clearSquare(row, col);
+    }
 
     return;
   }
@@ -50,7 +56,7 @@ class Grid {
     var Array rowArray;
     var boolean shouldAwaken;
 
-    let newGrid = Grid.new(rowCount, colCount);
+    let newGrid = Grid.new(rowCount, colCount, gridPainter);
 
     let scratchColCount = colCount;
     while(~(scratchColCount = 0)) {
@@ -128,13 +134,13 @@ class Grid {
 
     let curSquare = getSquare(row, col);
     do curSquare.awaken();
-    do paintSquare(true, row, col);
+    do gridPainter.drawSquare(row, col);
 
     return;
   }
 
   method void kill(int row, int col) {
-    do paintSquare(false, row, col);
+    do gridPainter.clearSquare(row, col);
     return;
   }
 
@@ -148,7 +154,7 @@ class Grid {
     return curSquare;
   }
 
-  method void clearUnlessAlive(int row, int col) {
+  method boolean alive(int row, int col) {
     var Square curSquare;
     var boolean curSquareIsAlive;
     var Array curCol;
@@ -156,16 +162,7 @@ class Grid {
     let curCol = grid[col];
     let curSquare = curCol[row];
 
-    if(~(curSquare.alive())) {
-      do paintSquare(false, row, col);
-    }
-    return;
-  }
-
-  method void paintSquare(boolean color, int row, int col) {
-    do Screen.setColor(color);
-    do Screen.drawRectangle(col * 16, row * 16, col * 16 + 15, row * 16 + 15);
-    return;
+    return curSquare.alive();
   }
 
   method void dispose() {

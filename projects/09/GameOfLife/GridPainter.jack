@@ -1,0 +1,36 @@
+class GridPainter {
+
+  field Cursor cursor;
+
+  constructor GridPainter new(Cursor c) {
+    let cursor = c;
+
+    return this;
+  }
+
+  method void clearSquare(int row, int col) {
+    var int cursorRow;
+    var int cursorCol;
+
+    let cursorRow = cursor.getRow();
+    let cursorCol = cursor.getCol();
+
+    if(~(cursorRow = row) | ~(cursorCol = col)) {
+      do paintSquare(false, row, col);
+    }
+
+    return;
+  }
+
+  method void drawSquare(int row, int col) {
+    do paintSquare(true, row, col);
+    return;
+  }
+
+  method void paintSquare(boolean color, int row, int col) {
+    do Screen.setColor(color);
+    do Screen.drawRectangle(col * 16, row * 16, col * 16 + 15, row * 16 + 15);
+    return;
+  }
+
+}

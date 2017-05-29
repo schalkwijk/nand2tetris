@@ -20,6 +20,8 @@ class Grid {
     var int scratchRowCount;
     var Array rowArray;
 
+
+    // I really wish Jack had for loops :(
     let scratchColCount = colCount;
     while(~(scratchColCount = 0)) {
       let scratchRowCount = rowCount;
@@ -68,8 +70,12 @@ class Grid {
         let scratchRowCount = scratchRowCount - 1;
         let shouldAwaken = calculateNextState(scratchRowCount, scratchColCount);
         if(shouldAwaken) {
+          // awaken cell in new grid, which includes drawing it on screen
           do newGrid.awaken(scratchRowCount, scratchColCount);
         } else {
+          // we just really want to clear out the square
+          // on the screen here - no need to kill it on the
+          // new grid because dead is default
           do kill(scratchRowCount, scratchColCount);
         }
       }
@@ -83,6 +89,8 @@ class Grid {
     var Square curSquare;
     let numberOfLiveNeighbors = 0;
 
+    // this is normally done with an array of tuples, but jack
+    // doesn't have built-in semantics for static array generation
     let numberOfLiveNeighbors = numberOfLiveNeighbors + isAlive(row - 1, col);
     let numberOfLiveNeighbors = numberOfLiveNeighbors + isAlive(row - 1, col - 1);
     let numberOfLiveNeighbors = numberOfLiveNeighbors + isAlive(row - 1, col + 1);

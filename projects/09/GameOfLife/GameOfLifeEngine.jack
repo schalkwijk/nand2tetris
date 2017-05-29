@@ -27,7 +27,7 @@ class GameOfLifeEngine {
     let exit = false;
     let inSimulation = false;
 
-    do cursor.move(0);
+    do drawCursor();
 
     while (~exit) {
       while ((key = 0) & (~exit)) {
@@ -42,7 +42,7 @@ class GameOfLifeEngine {
           do clearCursor();
           do cursor.move(key - 130);
           do drawCursor();
-          do Sys.wait(60);
+          do Sys.wait(50);
         } else {
           if(key = 129 & ~(previousKey = 129)) {
             let curRow = cursor.getRow();
@@ -63,6 +63,7 @@ class GameOfLifeEngine {
         let inSimulation = false;
         let newGrid = grid.tick();
         do grid.dispose();
+
         let grid = newGrid;
         let key = Keyboard.keyPressed();
       }

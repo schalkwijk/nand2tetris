@@ -28,8 +28,35 @@ class GridPainter {
   }
 
   method void paintSquare(boolean color, int row, int col) {
-    do Screen.setColor(color);
-    do Screen.drawRectangle(col * 16, row * 16, col * 16 + 15, row * 16 + 15);
+    do draw((row * 512) + col, color);
+    return;
+  }
+
+  method void draw(int location, boolean color) {
+    var int memAddress;
+    var int value;
+
+    let memAddress = 16384 + location;
+    if(color) {
+      let value = -1;
+    }
+
+    do Memory.poke(memAddress+0, value);
+    do Memory.poke(memAddress+32, value);
+    do Memory.poke(memAddress+64, value);
+    do Memory.poke(memAddress+96, value);
+    do Memory.poke(memAddress+128, value);
+    do Memory.poke(memAddress+160, value);
+    do Memory.poke(memAddress+192, value);
+    do Memory.poke(memAddress+224, value);
+    do Memory.poke(memAddress+256, value);
+    do Memory.poke(memAddress+288, value);
+    do Memory.poke(memAddress+320, value);
+    do Memory.poke(memAddress+352, value);
+    do Memory.poke(memAddress+384, value);
+    do Memory.poke(memAddress+416, value);
+    do Memory.poke(memAddress+448, value);
+    do Memory.poke(memAddress+480, value);
     return;
   }
 

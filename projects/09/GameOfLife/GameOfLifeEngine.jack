@@ -20,8 +20,8 @@ class GameOfLifeEngine {
         do Sys.wait(50);
       }
 
-      if(key = 81) { let exit = true; }// exit 
-      
+      if(key = 81) { let exit = true; }// exit
+
       while ((~(key = 0)) & (~exit)) {
         let key = Keyboard.keyPressed();
         if((key > 129) & (key < 134)) {

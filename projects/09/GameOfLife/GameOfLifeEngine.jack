@@ -57,15 +57,14 @@ class GameOfLifeEngine {
       }
 
       while(inSimulation) {
+        let inSimulation = false;
         let newGrid = grid.tick();
         do grid.dispose();
         let grid = newGrid;
-
-        do Sys.wait(50);
-        let inSimulation = false;
       }
 
       let previousKey = key;
+      let key = Keyboard.keyPressed();
     }
 
     do cursor.dispose();

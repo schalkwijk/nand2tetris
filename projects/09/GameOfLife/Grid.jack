@@ -35,16 +35,10 @@ class Grid {
 
   method void toggle(int row, int col) {
     var Square curSquare;
-
     let curSquare = getSquare(row, col);
 
     do curSquare.toggle();
-
-    if(curSquare.alive()) {
-      do paintSquare(true, row, col);
-    } else {
-      do paintSquare(false, row, col);
-    }
+    do paintSquare(curSquare.alive(), row, col);
 
     return;
   }
@@ -79,7 +73,54 @@ class Grid {
   }
 
   method boolean calculateNextState(int row, int col) {
-    return true;
+    var int numberOfLiveNeighbors;
+    var Square curSquare;
+    let numberOfLiveNeighbors = 0;
+
+    let numberOfLiveNeighbors = numberOfLiveNeighbors + isAlive(row - 1, col);
+    let numberOfLiveNeighbors = numberOfLiveNeighbors + isAlive(row - 1, col - 1);
+    let numberOfLiveNeighbors = numberOfLiveNeighbors + isAlive(row - 1, col + 1);
+
+    let numberOfLiveNeighbors = numberOfLiveNeighbors + isAlive(row + 1, col);
+    let numberOfLiveNeighbors = numberOfLiveNeighbors + isAlive(row + 1, col - 1);
+    let numberOfLiveNeighbors = numberOfLiveNeighbors + isAlive(row + 1, col + 1);
+
+    let numberOfLiveNeighbors = numberOfLiveNeighbors + isAlive(row, col - 1);
+    let numberOfLiveNeighbors = numberOfLiveNeighbors + isAlive(row, col + 1);
+
+    if((numberOfLiveNeighbors < 2) | (numberOfLiveNeighbors > 3)) {
+      return false;
+    } else {
+      let curSquare = getSquare(row, col);
+      if(curSquare.alive()) {
+        return true;
+      } else {
+        if(numberOfLiveNeighbors = 3) {
+          return true;
+        }
+        return false;
+      }
+    }
+  }
+
+  method int isAlive(int row, int col) {
+    var Square curSquare;
+
+    if((row < rowCount) & (row > -1)) {
+      if((col < colCount) & (col > -1)) {
+      } else {
+        return 0;
+      }
+    } else {
+      return 0;
+    }
+
+    let curSquare = getSquare(row, col);
+    if (curSquare.alive()) {
+      return 1;
+    } else {
+      return 0;
+    }
   }
 
   method void awaken(int row, int col) {

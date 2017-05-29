@@ -1,3 +1,4 @@
 - make the cursor be an X, colored to the backround
 - add highlighting for arguments during function declaration
 - add proper highlighting for comments
+- add warning syntax (for unreachable code!)

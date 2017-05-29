@@ -35,23 +35,76 @@ class Grid {
 
   method void toggle(int row, int col) {
     var Square curSquare;
-    var boolean curSquareIsAlive;
+
+    let curSquare = getSquare(row, col);
+
+    do curSquare.toggle();
+
+    if(curSquare.alive()) {
+      do paintSquare(true, row, col);
+    } else {
+      do paintSquare(false, row, col);
+    }
+
+    return;
+  }
+
+  method Grid tick() {
+    var Grid newGrid;
+    var int scratchColCount;
+    var int scratchRowCount;
+    var Array rowArray;
+    var boolean shouldAwaken;
+
+    let newGrid = Grid.new(rowCount, colCount);
+
+    let scratchColCount = colCount;
+    while(~(scratchColCount = 0)) {
+      let scratchRowCount = rowCount;
+      let scratchColCount = scratchColCount - 1;
+      let rowArray = grid[scratchColCount];
+
+      while(~(scratchRowCount = 0)) {
+        let scratchRowCount = scratchRowCount - 1;
+        let shouldAwaken = calculateNextState(scratchRowCount, scratchColCount);
+        if(shouldAwaken) {
+          do newGrid.awaken(scratchRowCount, scratchColCount);
+        } else {
+          do kill(scratchRowCount, scratchColCount);
+        }
+      }
+    }
+
+    return newGrid;
+  }
+
+  method boolean calculateNextState(int row, int col) {
+    return true;
+  }
+
+  method void awaken(int row, int col) {
+    var Square curSquare;
+
+    let curSquare = getSquare(row, col);
+    do curSquare.awaken();
+    do paintSquare(true, row, col);
+
+    return;
+  }
+
+  method void kill(int row, int col) {
+    do paintSquare(false, row, col);
+    return;
+  }
+
+  method Square getSquare(int row, int col) {
+    var Square curSquare;
     var Array curCol;
 
     let curCol = grid[col];
     let curSquare = curCol[row];
 
-    do curSquare.toggle();
-
-    if(curSquare.alive()) {
-      do Screen.setColor(true);
-      do Screen.drawRectangle(col * 16, row * 16, col * 16 + 15, row * 16 + 15);
-    } else {
-      do Screen.setColor(false);
-      do Screen.drawRectangle(col * 16, row * 16, col * 16 + 15, row * 16 + 15);
-    }
-
-    return;
+    return curSquare;
   }
 
   method void clearUnlessAlive(int row, int col) {
@@ -63,45 +116,39 @@ class Grid {
     let curSquare = curCol[row];
 
     if(~(curSquare.alive())) {
-      do Screen.setColor(false);
-      do Screen.drawRectangle(col * 16, row * 16, col * 16 + 15, row * 16 + 15);
+      do paintSquare(false, row, col);
     }
     return;
   }
 
-  method void draw() {
-    var int scratchColCount;
-    var int scratchRowCount;
-    var Array rowArray;
-    var Array curCol;
-    var Square curSquare;
-
-    let scratchColCount = colCount;
-
-    while(~(scratchColCount = 0)) {
-      let scratchColCount = scratchColCount - 1;
-      let scratchRowCount = rowCount;
-      let rowArray = grid[scratchColCount - 1];
-
-      while(~(scratchRowCount = 0)) {
-        let scratchRowCount = scratchRowCount - 1;
-        let curCol = grid[scratchColCount];
-        let curSquare = curCol[scratchRowCount];
-
-        if(curSquare.alive()) {
-          do Screen.setColor(true);
-          do Screen.drawRectangle(scratchColCount * 16, scratchRowCount * 16, scratchColCount * 16 + 15, scratchRowCount * 16 + 15);
-          } else {
-          do Screen.setColor(false);
-          do Screen.drawRectangle(scratchColCount * 16, scratchRowCount * 16, scratchColCount * 16 + 15, scratchRowCount * 16 + 15);
-        }
-      }
-    }
-
+  method void paintSquare(boolean color, int row, int col) {
+    do Screen.setColor(color);
+    do Screen.drawRectangle(col * 16, row * 16, col * 16 + 15, row * 16 + 15);
     return;
   }
 
   method void dispose() {
+    var int scratchColCount;
+    var int scratchRowCount;
+    var Array rowArray;
+    var Square curSquare;
+
+    let scratchColCount = colCount;
+    while(~(scratchColCount = 0)) {
+      let scratchColCount = scratchColCount - 1;
+      let rowArray = grid[scratchColCount];
+
+      let scratchRowCount = rowCount;
+      while(~(scratchRowCount = 0)) {
+        let scratchRowCount = scratchRowCount - 1;
+        let curSquare = rowArray[scratchRowCount];
+        do curSquare.dispose();
+      }
+
+      do rowArray.dispose();
+    }
+
+    do grid.dispose();
     do Memory.deAlloc(this);
     return;
   }

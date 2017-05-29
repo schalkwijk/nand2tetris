@@ -11,6 +11,11 @@ class Square {
     return alive;
   }
 
+  method void awaken() {
+    let alive = true;
+    return;
+  }
+
   method void toggle() {
     if(alive) {
       let alive = false;

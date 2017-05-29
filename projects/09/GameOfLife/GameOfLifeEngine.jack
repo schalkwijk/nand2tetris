@@ -16,11 +16,14 @@ class GameOfLifeEngine {
   method void run() {
     var char key;
     var char previousKey;
+    var boolean inSimulation;
+    var Grid newGrid;
 
     var int curRow;
     var int curCol;
     var boolean exit;
     let exit = false;
+    let inSimulation = false;
 
     do cursor.move(0, grid);
 
@@ -32,7 +35,7 @@ class GameOfLifeEngine {
 
       if(key = 81) { let exit = true; } // exit
 
-      while ((~(key = 0)) & (~exit)) {
+      while ((~(key = 0)) & (~exit) & ~(inSimulation)) {
         if((key > 129) & (key < 134)) {
           do cursor.move(key - 130, grid);
           do Sys.wait(60);
@@ -43,11 +46,25 @@ class GameOfLifeEngine {
             do grid.toggle(curRow, curCol);
             do cursor.draw();
             do Sys.wait(30);
+          } else {
+            if(key = 67) {
+              let inSimulation = true;
+            }
           }
         }
         let previousKey = key;
         let key = Keyboard.keyPressed();
       }
+
+      while(inSimulation) {
+        let newGrid = grid.tick();
+        do grid.dispose();
+        let grid = newGrid;
+
+        do Sys.wait(50);
+        let inSimulation = false;
+      }
+
       let previousKey = key;
     }
 

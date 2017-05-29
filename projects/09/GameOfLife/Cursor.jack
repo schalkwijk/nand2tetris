@@ -15,9 +15,8 @@ class Cursor {
     return this;
   }
 
-  method void move(int direction) {
-    do Screen.setColor(false);
-    do Screen.drawRectangle(col * 16, row * 16, col * 16 + 15, row * 16 + 15);
+  method void move(int direction, Grid grid) {
+    do grid.clearUnlessAlive(row, col);
 
     if (direction = 0) { // move left
         if((col - 1) > -1) { let col = col - 1; }

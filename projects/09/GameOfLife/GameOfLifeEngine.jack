@@ -15,37 +15,44 @@ class GameOfLifeEngine {
 
   method void run() {
     var char key;
+    var char previousKey;
+
     var int curRow;
     var int curCol;
     var boolean exit;
     let exit = false;
 
-    do cursor.move(0);
+    do cursor.move(0, grid);
 
     while (~exit) {
       while ((key = 0) & (~exit)) {
+        do Sys.wait(50);
         let key = Keyboard.keyPressed();
       }
 
       if(key = 81) { let exit = true; } // exit
 
       while ((~(key = 0)) & (~exit)) {
-        do grid.draw();
-        do cursor.draw();
-        let key = Keyboard.keyPressed();
         if((key > 129) & (key < 134)) {
-          do cursor.move(key - 130);
+          do cursor.move(key - 130, grid);
+          do Sys.wait(60);
         } else {
-          if(key = 129) {
+          if(key = 129 & ~(previousKey = 129)) {
             let curRow = cursor.getRow();
             let curCol = cursor.getCol();
             do grid.toggle(curRow, curCol);
+            do cursor.draw();
+            do Sys.wait(30);
           }
         }
+        let previousKey = key;
+        let key = Keyboard.keyPressed();
       }
+      let previousKey = key;
     }
 
     do cursor.dispose();
+    do grid.dispose();
     return;
   }
 

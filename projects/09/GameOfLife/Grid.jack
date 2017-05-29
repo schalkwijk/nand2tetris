@@ -43,6 +43,29 @@ class Grid {
 
     do curSquare.toggle();
 
+    if(curSquare.alive()) {
+      do Screen.setColor(true);
+      do Screen.drawRectangle(col * 16, row * 16, col * 16 + 15, row * 16 + 15);
+    } else {
+      do Screen.setColor(false);
+      do Screen.drawRectangle(col * 16, row * 16, col * 16 + 15, row * 16 + 15);
+    }
+
+    return;
+  }
+
+  method void clearUnlessAlive(int row, int col) {
+    var Square curSquare;
+    var boolean curSquareIsAlive;
+    var Array curCol;
+
+    let curCol = grid[col];
+    let curSquare = curCol[row];
+
+    if(~(curSquare.alive())) {
+      do Screen.setColor(false);
+      do Screen.drawRectangle(col * 16, row * 16, col * 16 + 15, row * 16 + 15);
+    }
     return;
   }
 

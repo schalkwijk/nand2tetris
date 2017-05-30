@@ -93,11 +93,16 @@ class GameOfLifeEngine {
   method void drawCursor() {
     var int row;
     var int col;
+    var boolean squareIsAlive;
 
     let row = cursor.getRow();
     let col = cursor.getCol();
 
-    do gridPainter.drawSquare(row, col);
+    let squareIsAlive = grid.alive(row, col);
+    if(~squareIsAlive) {
+      do gridPainter.paintCursor(row, col);
+    }
+
     return;
   }
 

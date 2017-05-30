@@ -15,7 +15,9 @@ class GridPainter {
     let cursorRow = cursor.getRow();
     let cursorCol = cursor.getCol();
 
-    if(~(cursorRow = row) | ~(cursorCol = col)) {
+    if((cursorRow = row) & (cursorCol = col)) {
+      do paintCursor(row, col);
+    } else {
       do paintSquare(false, row, col);
     }
 
@@ -32,6 +34,11 @@ class GridPainter {
     return;
   }
 
+  method void paintCursor(int row, int col) {
+    do drawCursor((row * 512) + col);
+    return;
+  }
+
   method void draw(int location, boolean color) {
     var int memAddress;
     var int value;
@@ -41,22 +48,48 @@ class GridPainter {
       let value = -1;
     }
 
-    do Memory.poke(memAddress+0, value);
-    do Memory.poke(memAddress+32, value);
-    do Memory.poke(memAddress+64, value);
-    do Memory.poke(memAddress+96, value);
-    do Memory.poke(memAddress+128, value);
-    do Memory.poke(memAddress+160, value);
-    do Memory.poke(memAddress+192, value);
-    do Memory.poke(memAddress+224, value);
-    do Memory.poke(memAddress+256, value);
-    do Memory.poke(memAddress+288, value);
-    do Memory.poke(memAddress+320, value);
-    do Memory.poke(memAddress+352, value);
-    do Memory.poke(memAddress+384, value);
-    do Memory.poke(memAddress+416, value);
-    do Memory.poke(memAddress+448, value);
-    do Memory.poke(memAddress+480, value);
+    do Memory.poke(memAddress + 0, value);
+    do Memory.poke(memAddress + 32, value);
+    do Memory.poke(memAddress + 64, value);
+    do Memory.poke(memAddress + 96, value);
+    do Memory.poke(memAddress + 128, value);
+    do Memory.poke(memAddress + 160, value);
+    do Memory.poke(memAddress + 192, value);
+    do Memory.poke(memAddress + 224, value);
+    do Memory.poke(memAddress + 256, value);
+    do Memory.poke(memAddress + 288, value);
+    do Memory.poke(memAddress + 320, value);
+    do Memory.poke(memAddress + 352, value);
+    do Memory.poke(memAddress + 384, value);
+    do Memory.poke(memAddress + 416, value);
+    do Memory.poke(memAddress + 448, value);
+    do Memory.poke(memAddress + 480, value);
+    return;
+  }
+
+  method void drawCursor(int location) {
+    var int memAddress;
+    var int background;
+
+    let memAddress = 16384 + location;
+    let background = Memory.peek(memAddress);
+
+    do Memory.poke(memAddress + 0, -32767);
+    do Memory.poke(memAddress + 32, 16386);
+    do Memory.poke(memAddress + 64, 8196);
+    do Memory.poke(memAddress + 96, 4104);
+    do Memory.poke(memAddress + 128, 2064);
+    do Memory.poke(memAddress + 160, 1056);
+    do Memory.poke(memAddress + 192, 576);
+    do Memory.poke(memAddress + 224, 384);
+    do Memory.poke(memAddress + 256, 384);
+    do Memory.poke(memAddress + 288, 576);
+    do Memory.poke(memAddress + 320, 1056);
+    do Memory.poke(memAddress + 352, 2064);
+    do Memory.poke(memAddress + 384, 4104);
+    do Memory.poke(memAddress + 416, 8196);
+    do Memory.poke(memAddress + 448, 16386);
+    do Memory.poke(memAddress + 480, -32767);
     return;
   }
 

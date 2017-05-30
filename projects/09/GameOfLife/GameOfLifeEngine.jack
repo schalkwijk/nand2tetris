@@ -7,7 +7,7 @@ class GameOfLifeEngine {
   field GridPainter gridPainter;
 
   constructor GameOfLifeEngine new() {
-    let rowCount = 16;
+    let rowCount = 15;
     let colCount = 32;
     let cursor = Cursor.new(rowCount, colCount);
     let gridPainter = GridPainter.new(cursor);
@@ -25,38 +25,41 @@ class GameOfLifeEngine {
     var boolean exit;
     let exit = false;
 
+    do Output.moveCursor(22, 0);
+    do Output.printString("Game Of Life | ");
+    do Output.printString("Arrows To Move | ");
+    do Output.printString("[T]oggle Square | ");
+    do Output.printString("[N]ext Cycle");
+    do Screen.drawLine(0, 241, 511, 241);
+
     do drawCursor();
 
     while (~exit) {
-      while ((key = 0) & (~exit)) {
-        do Sys.wait(50);
-        let key = Keyboard.keyPressed();
-      }
-
-      if(key = 81) { let exit = true; } // exit
+      let key = Keyboard.keyPressed();
 
       while ((~(key = 0)) & (~exit)) {
-        if((key > 129) & (key < 134)) { // arrow keys
+        if(key = 81) { let exit = true; }
+
+        if((key > 129) & (key < 134)) {
           do clearCursor();
           do cursor.move(key - 130);
           do drawCursor();
-          do Sys.wait(100);
-        } else {
-          if(key = 129 & ~(previousKey = 129)) { // backspace
-            let curRow = cursor.getRow();
-            let curCol = cursor.getCol();
-            do grid.toggle(curRow, curCol);
-            do Sys.wait(30);
-          } else {
-            if(key = 67) { // c
-              let newGrid = grid.tick();
-              do grid.dispose();
-
-              let grid = newGrid;
-              let key = Keyboard.keyPressed();
-            }
-          }
+          do Sys.wait(70);
         }
+
+        if(key = 84 & ~(previousKey = 84)) {
+          let curRow = cursor.getRow();
+          let curCol = cursor.getCol();
+          do grid.toggle(curRow, curCol);
+          do Sys.wait(60);
+        }
+
+        if(key = 78) {
+          let newGrid = grid.tick();
+          do grid.dispose();
+          let grid = newGrid;
+        }
+
         let previousKey = key;
         let key = Keyboard.keyPressed();
       }

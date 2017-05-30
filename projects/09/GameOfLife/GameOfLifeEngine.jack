@@ -12,6 +12,7 @@ class GameOfLifeEngine {
     let cursor = Cursor.new(rowCount, colCount);
     let gridPainter = GridPainter.new(cursor);
     let grid = Grid.new(rowCount, colCount, gridPainter);
+
     return this;
   }
 
@@ -19,9 +20,6 @@ class GameOfLifeEngine {
     var char key;
     var char previousKey;
     var Grid newGrid;
-
-    var int curRow;
-    var int curCol;
     var boolean exit;
 
     let exit = false;
@@ -39,14 +37,12 @@ class GameOfLifeEngine {
           do clearCursor();
           do cursor.move(key - 130);
           do drawCursor();
-          do Sys.wait(70);
+          do Sys.wait(100);
         }
 
         // toggle
         if(key = 84 & ~(previousKey = 84)) {
-          let curRow = cursor.getRow();
-          let curCol = cursor.getCol();
-          do grid.toggle(curRow, curCol);
+          do grid.toggle(cursor.getRow(), cursor.getCol());
           do Sys.wait(60);
         }
 
@@ -107,6 +103,8 @@ class GameOfLifeEngine {
 
   method void dispose() {
     do cursor.dispose();
+    do gridPainter.dispose();
+    do grid.dispose();
     return;
   }
 

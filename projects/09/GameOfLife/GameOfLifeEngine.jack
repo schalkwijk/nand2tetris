@@ -23,15 +23,9 @@ class GameOfLifeEngine {
     var int curRow;
     var int curCol;
     var boolean exit;
+
     let exit = false;
-
-    do Output.moveCursor(22, 0);
-    do Output.printString("Game Of Life | ");
-    do Output.printString("Arrows To Move | ");
-    do Output.printString("[T]oggle Square | ");
-    do Output.printString("[N]ext Cycle");
-    do Screen.drawLine(0, 241, 511, 241);
-
+    do printBanner();
     do drawCursor();
 
     while (~exit) {
@@ -40,6 +34,7 @@ class GameOfLifeEngine {
       while ((~(key = 0)) & (~exit)) {
         if(key = 81) { let exit = true; }
 
+        // move cursor
         if((key > 129) & (key < 134)) {
           do clearCursor();
           do cursor.move(key - 130);
@@ -47,6 +42,7 @@ class GameOfLifeEngine {
           do Sys.wait(70);
         }
 
+        // toggle
         if(key = 84 & ~(previousKey = 84)) {
           let curRow = cursor.getRow();
           let curCol = cursor.getCol();
@@ -54,6 +50,7 @@ class GameOfLifeEngine {
           do Sys.wait(60);
         }
 
+        // next cycle
         if(key = 78) {
           let newGrid = grid.tick();
           do grid.dispose();
@@ -67,6 +64,17 @@ class GameOfLifeEngine {
 
     do cursor.dispose();
     do grid.dispose();
+    return;
+  }
+
+  method void printBanner() {
+    do Output.moveCursor(22, 0);
+    do Output.printString("Game Of Life | ");
+    do Output.printString("Arrows To Move | ");
+    do Output.printString("[T]oggle Square | ");
+    do Output.printString("[N]ext Cycle");
+    do Screen.drawLine(0, 241, 511, 241);
+
     return;
   }
 

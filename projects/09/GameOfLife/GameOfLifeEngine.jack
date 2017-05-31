@@ -53,7 +53,6 @@ class GameOfLifeEngine {
           do drawCursor();
           do grid.dispose();
           let grid = newGrid;
-          do Sys.wait(100);
         }
 
         let previousKey = key;

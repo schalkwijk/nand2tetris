@@ -20,16 +20,14 @@ class Grid {
     var int scratchRowCount;
     var Array rowArray;
 
-
-    // I really wish Jack had for loops :(
     let scratchColCount = colCount;
     while(~(scratchColCount = 0)) {
       let scratchRowCount = rowCount;
       let rowArray = Array.new(rowCount);
       let grid[scratchColCount - 1] = rowArray;
       while(~(scratchRowCount = 0)) {
-       let rowArray[scratchRowCount - 1] = Square.new();
-       let scratchRowCount = scratchRowCount - 1;
+        let rowArray[scratchRowCount - 1] = Square.new();
+        let scratchRowCount = scratchRowCount - 1;
       }
       let scratchColCount = scratchColCount - 1;
     }
@@ -76,7 +74,7 @@ class Grid {
           // we just really want to clear out the square
           // on the screen here - no need to kill it on the
           // new grid because dead is default
-          do kill(scratchRowCount, scratchColCount);
+          do gridPainter.clearSquare(scratchRowCount, scratchColCount);
         }
       }
     }
@@ -106,26 +104,18 @@ class Grid {
       return false;
     } else {
       let curSquare = getSquare(row, col);
-      if(curSquare.alive()) {
+      if(curSquare.alive() | (numberOfLiveNeighbors = 3)) {
         return true;
-      } else {
-        if(numberOfLiveNeighbors = 3) {
-          return true;
-        }
-        return false;
       }
     }
+
+    return false;
   }
 
   method int isAlive(int row, int col) {
     var Square curSquare;
 
-    if((row < rowCount) & (row > -1)) {
-      if((col < colCount) & (col > -1)) {
-      } else {
-        return 0;
-      }
-    } else {
+    if(~((row < rowCount) & (row > -1) & (col < colCount) & (col > -1))) {
       return 0;
     }
 
@@ -147,10 +137,6 @@ class Grid {
     return;
   }
 
-  method void kill(int row, int col) {
-    do gridPainter.clearSquare(row, col);
-    return;
-  }
 
   method Square getSquare(int row, int col) {
     var Square curSquare;
@@ -196,6 +182,7 @@ class Grid {
 
     do grid.dispose();
     do Memory.deAlloc(this);
+
     return;
   }
 

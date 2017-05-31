@@ -43,14 +43,17 @@ class GameOfLifeEngine {
         // toggle
         if(key = 84 & ~(previousKey = 84)) {
           do grid.toggle(cursor.getRow(), cursor.getCol());
-          do Sys.wait(60);
+          do drawCursor();
+          do Sys.wait(50);
         }
 
         // next cycle
         if(key = 78) {
           let newGrid = grid.tick();
+          do drawCursor();
           do grid.dispose();
           let grid = newGrid;
+          do Sys.wait(100);
         }
 
         let previousKey = key;
@@ -83,7 +86,9 @@ class GameOfLifeEngine {
     let col = cursor.getCol();
     let squareIsAlive = grid.alive(row, col);
 
-    if(~squareIsAlive) {
+    if(squareIsAlive) {
+      do gridPainter.paintSquare(true, row, col);
+    } else {
       do gridPainter.paintSquare(false, row, col);
     }
 
@@ -99,8 +104,10 @@ class GameOfLifeEngine {
     let col = cursor.getCol();
 
     let squareIsAlive = grid.alive(row, col);
-    if(~squareIsAlive) {
-      do gridPainter.paintCursor(row, col);
+    if(squareIsAlive) {
+      do gridPainter.paintWhiteCursor(row, col);
+    } else {
+      do gridPainter.paintBlackCursor(row, col);
     }
 
     return;

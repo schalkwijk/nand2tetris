@@ -15,10 +15,10 @@ class GridPainter {
     let cursorRow = cursor.getRow();
     let cursorCol = cursor.getCol();
 
+    do paintSquare(false, row, col);
+
     if((cursorRow = row) & (cursorCol = col)) {
-      do paintCursor(row, col);
-    } else {
-      do paintSquare(false, row, col);
+      do paintBlackCursor(row, col);
     }
 
     return;
@@ -34,8 +34,13 @@ class GridPainter {
     return;
   }
 
-  method void paintCursor(int row, int col) {
-    do drawCursor((row * 512) + col);
+  method void paintBlackCursor(int row, int col) {
+    do drawBlackCursor((row * 512) + col);
+    return;
+  }
+
+  method void paintWhiteCursor(int row, int col) {
+    do drawWhiteCursor((row * 512) + col);
     return;
   }
 
@@ -67,7 +72,7 @@ class GridPainter {
     return;
   }
 
-  method void drawCursor(int location) {
+  method void drawBlackCursor(int location) {
     var int memAddress;
     var int background;
 
@@ -90,6 +95,32 @@ class GridPainter {
     do Memory.poke(memAddress + 416, 8196);
     do Memory.poke(memAddress + 448, 16386);
     do Memory.poke(memAddress + 480, -32767);
+    return;
+  }
+
+  method void drawWhiteCursor(int location) {
+    var int memAddress;
+    var int background;
+
+    let memAddress = 16384 + location;
+    let background = Memory.peek(memAddress);
+
+    do Memory.poke(memAddress + 0, 32766);
+    do Memory.poke(memAddress + 32, -16387);
+    do Memory.poke(memAddress + 64, -8197);
+    do Memory.poke(memAddress + 96, -4105);
+    do Memory.poke(memAddress + 128, -2065);
+    do Memory.poke(memAddress + 160, -1057);
+    do Memory.poke(memAddress + 192, -577);
+    do Memory.poke(memAddress + 224, -385);
+    do Memory.poke(memAddress + 256, -385);
+    do Memory.poke(memAddress + 288, -577);
+    do Memory.poke(memAddress + 320, -1057);
+    do Memory.poke(memAddress + 352, -2065);
+    do Memory.poke(memAddress + 384, -4105);
+    do Memory.poke(memAddress + 416, -8197);
+    do Memory.poke(memAddress + 448, -16387);
+    do Memory.poke(memAddress + 480, 32766);
     return;
   }
 

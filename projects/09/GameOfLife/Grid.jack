@@ -55,6 +55,7 @@ class Grid {
     var int scratchRowCount;
     var Array rowArray;
     var boolean shouldAwaken;
+    var Square curSquare;
 
     let newGrid = Grid.new(rowCount, colCount, gridPainter);
 
@@ -66,15 +67,18 @@ class Grid {
 
       while(~(scratchRowCount = 0)) {
         let scratchRowCount = scratchRowCount - 1;
-        let shouldAwaken = calculateNextState(scratchRowCount, scratchColCount);
+        let curSquare = getSquare(scratchRowCount, scratchColCount);
+        let shouldAwaken = calculateNextState(curSquare, scratchRowCount, scratchColCount);
         if(shouldAwaken) {
           // awaken cell in new grid, which includes drawing it on screen
-          do newGrid.awaken(scratchRowCount, scratchColCount);
+          do newGrid.awaken(curSquare, scratchRowCount, scratchColCount);
         } else {
           // we just really want to clear out the square
           // on the screen here - no need to kill it on the
           // new grid because dead is default
-          do gridPainter.clearSquare(scratchRowCount, scratchColCount);
+          if(curSquare.alive()) {
+            do gridPainter.clearSquare(scratchRowCount, scratchColCount);
+          }
         }
       }
     }
@@ -82,20 +86,27 @@ class Grid {
     return newGrid;
   }
 
-  method boolean calculateNextState(int row, int col) {
+  method boolean calculateNextState(Square curSquare, int row, int col) {
     var int numberOfLiveNeighbors;
+    var int rowCountMinusOne;
     var Square curSquare;
     let numberOfLiveNeighbors = 0;
 
     // this is normally done with an array of tuples, but jack
     // doesn't have built-in semantics for static array generation
-    let numberOfLiveNeighbors = numberOfLiveNeighbors + isAlive(row - 1, col);
-    let numberOfLiveNeighbors = numberOfLiveNeighbors + isAlive(row - 1, col - 1);
-    let numberOfLiveNeighbors = numberOfLiveNeighbors + isAlive(row - 1, col + 1);
 
-    let numberOfLiveNeighbors = numberOfLiveNeighbors + isAlive(row + 1, col);
-    let numberOfLiveNeighbors = numberOfLiveNeighbors + isAlive(row + 1, col - 1);
-    let numberOfLiveNeighbors = numberOfLiveNeighbors + isAlive(row + 1, col + 1);
+    if(row > 0) {
+      let numberOfLiveNeighbors = numberOfLiveNeighbors + isAlive(row - 1, col);
+      let numberOfLiveNeighbors = numberOfLiveNeighbors + isAlive(row - 1, col - 1);
+      let numberOfLiveNeighbors = numberOfLiveNeighbors + isAlive(row - 1, col + 1);
+    }
+
+    let rowCountMinusOne = rowCount - 1;
+    if(row < rowCountMinusOne) {
+      let numberOfLiveNeighbors = numberOfLiveNeighbors + isAlive(row + 1, col);
+      let numberOfLiveNeighbors = numberOfLiveNeighbors + isAlive(row + 1, col - 1);
+      let numberOfLiveNeighbors = numberOfLiveNeighbors + isAlive(row + 1, col + 1);
+    }
 
     let numberOfLiveNeighbors = numberOfLiveNeighbors + isAlive(row, col - 1);
     let numberOfLiveNeighbors = numberOfLiveNeighbors + isAlive(row, col + 1);
@@ -103,7 +114,6 @@ class Grid {
     if((numberOfLiveNeighbors < 2) | (numberOfLiveNeighbors > 3)) {
       return false;
     } else {
-      let curSquare = getSquare(row, col);
       if(curSquare.alive() | (numberOfLiveNeighbors = 3)) {
         return true;
       }
@@ -115,7 +125,7 @@ class Grid {
   method int isAlive(int row, int col) {
     var Square curSquare;
 
-    if(~((row < rowCount) & (row > -1) & (col < colCount) & (col > -1))) {
+    if(~((col < colCount) & (col > -1))) {
       return 0;
     }
 
@@ -127,12 +137,14 @@ class Grid {
     }
   }
 
-  method void awaken(int row, int col) {
+  method void awaken(Square oldSquare, int row, int col) {
     var Square curSquare;
 
     let curSquare = getSquare(row, col);
     do curSquare.awaken();
-    do gridPainter.drawSquare(row, col);
+    if(~oldSquare.alive()) { // avoid drawing if at all possible
+      do gridPainter.drawSquare(row, col);
+    }
 
     return;
   }

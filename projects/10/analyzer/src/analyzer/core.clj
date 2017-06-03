@@ -25,7 +25,7 @@
 
 (defn- instruction-is-not-comment [instruction]
   (not (-> instruction
-           (str/split #"//|/\*\*")
+           (str/split #"//|/\*\*|\*|\*/")
            first-or-empty
            str/trim
            str/blank?)))

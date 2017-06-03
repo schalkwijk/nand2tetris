@@ -39,7 +39,7 @@
   {:type :identifier :value bit})
 
 (defn- identify-token [bit interned-strings]
-  (first (filter #(not (nil? %)) (map #(% bit) [(partial construct-string interned-strings)construct-keyword construct-symbol construct-integer construct-identifier]))))
+  (first (filter some? (map #(% bit) [(partial construct-string interned-strings) construct-keyword construct-symbol construct-integer construct-identifier]))))
 
 (defn- intern-strings [interned-strings instruction]
   (let [match (re-find #"\"(.*?[^\\])\"" instruction)
@@ -49,8 +49,11 @@
 (defn- intern-string-constants [instruction]
   (intern-strings {} instruction))
 
-(defn analyze [instruction]
+(defn analyze-instruction [instruction]
   (let [{interned-strings :interned-strings
          interned-instruction :instruction} (intern-string-constants instruction)
         instruction-bits (split-on-delimiters interned-instruction)]
     (map #(identify-token % interned-strings) instruction-bits)))
+
+(defn analyze-instructions [instructions]
+  (map analyze-instruction (str/split instructions #"\n")))

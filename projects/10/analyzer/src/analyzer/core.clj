@@ -13,9 +13,22 @@
   #"[0-9]+(.[0-9]+)?")
 
 (defn- in?
-  "true if collection contains element"
+  "True if collection contains element"
   [collection element]
   (some #(= element %) collection))
+
+(defn- first-or-empty [instruction]
+  (if (empty? instruction) "" (first instruction)))
+
+(defn- instruction-is-not-comment [instruction]
+  (not (-> instruction
+           (str/split #"//|/\*\*")
+           first-or-empty
+           str/trim
+           str/blank?)))
+
+(defn- split-and-strip-instructions [instructions]
+  (map #(first (str/split % #"//")) (filter instruction-is-not-comment (str/split instructions #"\n"))))
 
 (defn- void-matcher [pattern]
   (str "(?=\\" pattern ")|(?<=\\" pattern ")"))
@@ -44,7 +57,8 @@
 (defn- intern-strings [interned-strings instruction]
   (let [match (re-find #"\"(.*?[^\\])\"" instruction)
         replacement-symbol (str "@" (count interned-strings))]
-    (if match (recur (assoc interned-strings replacement-symbol (last match)) (str/replace instruction (first match) replacement-symbol)) {:interned-strings interned-strings :instruction instruction})))
+    (if match (recur (assoc interned-strings replacement-symbol (last match)) (str/replace instruction (first match) replacement-symbol))
+        {:interned-strings interned-strings :instruction instruction})))
 
 (defn- intern-string-constants [instruction]
   (intern-strings {} instruction))
@@ -56,4 +70,4 @@
     (map #(identify-token % interned-strings) instruction-bits)))
 
 (defn analyze-instructions [instructions]
-  (map analyze-instruction (str/split instructions #"\n")))
+  (map analyze-instruction (split-and-strip-instructions instructions)))

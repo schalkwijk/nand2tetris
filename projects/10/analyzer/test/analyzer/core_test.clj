@@ -102,6 +102,25 @@
         {:type :symbol :value ";"} 2 3
         {:type :symbol :value "}"} 3 0)))
 
-;; TODO
-;; Handle comments
-;; Output data in desired format
+(deftest handling-comments-at-beginning-of-line
+  (let [instructions "//Test\n/** Longer Comment */\nclass Main {\nfunction void main() {\n var Array a;\n}\n"]
+    (are [value instruction-number token-number]
+        (= value (nth (nth (analyze-instructions instructions) instruction-number) token-number))
+      {:type :keyword :value "class"} 0 0
+      {:type :identifier :value "Main"} 0 1
+      {:type :symbol :value "{"} 0 2
+      {:type :keyword :value "function"} 1 0
+      {:type :keyword :value "void"} 1 1
+      {:type :identifier :value "main"} 1 2
+      {:type :symbol :value "("} 1 3
+      {:type :symbol :value ")"} 1 4
+      {:type :symbol :value "{"} 1 5
+      {:type :keyword :value "var"} 2 0
+      {:type :identifier :value "Array"} 2 1
+      {:type :identifier :value "a"} 2 2
+      {:type :symbol :value ";"} 2 3
+      {:type :symbol :value "}"} 3 0)))
+
+(deftest handling-comments-after-code
+  (let [instructions "class Main {\nfunction void main() {\n var Array a; // random var\n}\n"]
+    (is (= 4 (count (nth (analyze-instructions instructions) 2))))))

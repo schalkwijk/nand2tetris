@@ -84,6 +84,18 @@
   (let [formatted-instructions (str/join "\n" (map format-instruction instructions))]
     (print (str "<tokens>\n" formatted-instructions "\n</tokens>"))))
 
+(defn- analyze-single-file [filename]
+  (let [xml-filename (str/replace (.getName (io/file filename)) ".jack" "T.xml")
+        output-filename (str (System/getProperty "user.dir") "/" xml-filename)]
+    (with-open [rdr (io/reader filename)]
+      (with-open [wrtr (io/writer output-filename)]
+        (.write wrtr (with-out-str (output-instructions (flatten (analyze-instructions (line-seq rdr))))))))))
+
+(defn- extract-jack-files-from-directory [directory]
+  (filter #(re-matches #".*\.jack" (.getName %)) (.listFiles directory)))
+
 (defn -main [filename]
-  (with-open [rdr (io/reader filename)]
-    (output-instructions (flatten (analyze-instructions (line-seq rdr))))))
+  (let [file (io/file filename)
+        directory? (.isDirectory file)
+        files (if directory? (extract-jack-files-from-directory file) [file])]
+    (doall (map analyze-single-file files))))

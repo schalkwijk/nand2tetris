@@ -131,3 +131,7 @@
     {:type :symbol :value "<"} #"> &lt; <"
     {:type :symbol :value ">"} #"> &gt; <"
     {:type :symbol :value "&"} #"> &amp; <"))
+
+;; TODO
+;; write Makefile to continually test this MainT.xml files
+;; add support for processing a single directory

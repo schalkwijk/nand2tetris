@@ -11,3 +11,4 @@ vm-translator*
 *projects/07/**/*.asm
 *projects/08/**/*.asm
 *projects/09/**/*.vm
+*projects/10/**/*T.xml

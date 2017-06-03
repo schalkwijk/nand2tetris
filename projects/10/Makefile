@@ -7,7 +7,7 @@ JackAnalyzer: uberjar
 	chmod +x $(script)
 
 clean:
-	rm -f $(script); rm -f project$(project).zip; rm -f $(jar); rm -rf target
+	rm -f $(script); rm -f project$(project).zip; rm -f $(jar); rm -rf target; rm -rf *T.xml
 
 uberjar:
 	cd analyzer && lein uberjar && cp target/$(jar) ..
@@ -21,4 +21,4 @@ test-all:
 zip: uberjar
 	zip project$(project).zip Makefile analyzer/project.clj $(jar)
 
-all: clean uberjar $(script) compile-all test-all zip
+all: clean uberjar $(script) test-all zip

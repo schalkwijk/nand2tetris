@@ -73,7 +73,7 @@
     {:type :symbol :value ";"} 4))
 
 (deftest handling-string-constants
-  (are [value location] (= value (nth (analyze "do Output.printString(\"THE AVERAGE IS: \")") location))
+  (are [value location] (= value (nth (analyze "do Output.printString(\"THE AVERAGE IS: \");") location))
     {:type :keyword :value "do"} 0
     {:type :identifier :value "Output"} 1
     {:type :symbol :value "."} 2
@@ -81,4 +81,4 @@
     {:type :symbol :value "("} 4
     {:type :stringConstant :value "THE AVERAGE IS: "} 5
     {:type :symbol :value ")"} 6
-    {:type :identifier :value ";"} 7))
+    {:type :symbol :value ";"} 7))

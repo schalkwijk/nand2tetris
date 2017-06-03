@@ -12,6 +12,9 @@
 (def integer-re
   #"[0-9]+(.[0-9]+)?")
 
+(def html-escape-sequences
+  {\< "&lt;", \> "&gt;", \& "&amp;"})
+
 (defn- in?
   "True if collection contains element"
   [collection element]
@@ -28,7 +31,7 @@
            str/blank?)))
 
 (defn- split-and-strip-instructions [instructions]
-  (map #(first (str/split % #"//")) (filter instruction-is-not-comment (str/split instructions #"\n"))))
+  (map #(first (str/split % #"//")) (filter instruction-is-not-comment instructions)))
 
 (defn- void-matcher [pattern]
   (str "(?=\\" pattern ")|(?<=\\" pattern ")"))
@@ -71,3 +74,16 @@
 
 (defn analyze-instructions [instructions]
   (map analyze-instruction (split-and-strip-instructions instructions)))
+
+(defn- format-instruction [instruction]
+  (let [type (name (:type instruction))
+        value (str/escape (:value instruction) html-escape-sequences)]
+    (str "<" type "> " value " </" type ">")))
+
+(defn output-instructions [instructions]
+  (let [formatted-instructions (str/join "\n" (map format-instruction instructions))]
+    (print (str "<tokens>\n" formatted-instructions "\n</tokens>"))))
+
+(defn -main [filename]
+  (with-open [rdr (io/reader filename)]
+    (output-instructions (flatten (analyze-instructions (line-seq rdr))))))

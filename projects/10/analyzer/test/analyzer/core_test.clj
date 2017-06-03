@@ -84,7 +84,7 @@
     {:type :symbol :value ";"} 7))
 
 (deftest handling-multiline-entries
-  (let [instructions "class Main {\nfunction void main() {\n var Array a;\n}\n"]
+  (let [instructions ["class Main {", "function void main() {", " var Array a;", "}"]]
     (are [value instruction-number token-number]
         (= value (nth (nth (analyze-instructions instructions) instruction-number) token-number))
         {:type :keyword :value "class"} 0 0
@@ -103,7 +103,7 @@
         {:type :symbol :value "}"} 3 0)))
 
 (deftest handling-comments-at-beginning-of-line
-  (let [instructions "//Test\n/** Longer Comment */\nclass Main {\nfunction void main() {\n var Array a;\n}\n"]
+  (let [instructions ["//Test", "/** Longer Comment */", "class Main {", "function void main() {", "var Array a;", "}"]]
     (are [value instruction-number token-number]
         (= value (nth (nth (analyze-instructions instructions) instruction-number) token-number))
       {:type :keyword :value "class"} 0 0
@@ -122,5 +122,12 @@
       {:type :symbol :value "}"} 3 0)))
 
 (deftest handling-comments-after-code
-  (let [instructions "class Main {\nfunction void main() {\n var Array a; // random var\n}\n"]
+  (let [instructions ["class Main {", "function void main() {", " var Array a; // random var", "}"]]
     (is (= 4 (count (nth (analyze-instructions instructions) 2))))))
+
+(deftest outputting-special-xml-characters
+  (are [instruction output]
+      (re-find output (with-out-str (output-instructions [instruction])))
+    {:type :symbol :value "<"} #"> &lt; <"
+    {:type :symbol :value ">"} #"> &gt; <"
+    {:type :symbol :value "&"} #"> &amp; <"))

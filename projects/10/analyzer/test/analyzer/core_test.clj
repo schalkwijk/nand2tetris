@@ -103,5 +103,5 @@
         {:type :symbol :value "}"} 3 0)))
 
 ;; TODO
-;; Handle more than one line of input
+;; Handle comments
 ;; Output data in desired format

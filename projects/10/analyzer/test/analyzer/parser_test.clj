@@ -45,7 +45,7 @@
       [0 :class 3 :subroutineDec 2] method-name)))
 
 ;; TODO
-;; print basic example to see if you can properly construct XML
+;; make tokenize-instructions not need to be flattened
 ;; make sure the tokenizer can handle negative numbers
 ;; Handle variable declarations in class
 ;; handle method arguments

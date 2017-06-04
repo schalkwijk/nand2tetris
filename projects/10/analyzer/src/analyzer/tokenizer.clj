@@ -1,6 +1,5 @@
 (ns analyzer.tokenizer
-  (:require [clojure.string :as str]
-            [analyzer.formatter]))
+  (:require [clojure.string :as str]))
 
 (def keywords
   ["class" "constructor" "function" "method" "field" "static" "var" "int" "char" "boolean" "void" "true" "false" "null" "this" "let" "do" "if" "else" "while" "return"])
@@ -10,7 +9,6 @@
 
 (def integer-re
   #"[0-9]+(.[0-9]+)?")
-
 
 (defn- in?
   "True if collection contains element"

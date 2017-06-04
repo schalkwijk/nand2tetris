@@ -46,5 +46,7 @@
 
 ;; TODO
 ;; print basic example to see if you can properly construct XML
+;; make sure the tokenizer can handle negative numbers
 ;; Handle variable declarations in class
+;; handle method arguments
 ;; Handle method body

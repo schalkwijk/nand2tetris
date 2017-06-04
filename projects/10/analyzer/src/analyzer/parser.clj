@@ -44,19 +44,24 @@
        (consume-matching-value :symbol "{")
        (consume-matching-value :symbol "}")))
 
-(defn- parse-class-body [tokens parsed-elements]
+(defn- parse-class-body [{:keys [tokens parsed-elements]}]
   (cond
     (looking-at-keyword ["constructor" "function" "method"] tokens)
     (let [subroutine (parse-subroutine tokens)]
-      (recur (:tokens subroutine) (conj parsed-elements {:subroutineDec (:parsed-elements subroutine)})))
+      (recur {:tokens (:tokens subroutine) :parsed-elements
+              (conj parsed-elements {:subroutineDec (:parsed-elements subroutine)})}))
 
     (looking-at-keyword ["static" "field"] tokens) (parse-class-var-dec)
     :else {:tokens tokens :parsed-elements parsed-elements}))
 
 (defn- parse-class [tokens]
-  (let [cross-roads (consume-matching-value :symbol "{" (consume :identifier (consume-matching-value :keyword "class" {:tokens tokens :parsed-elements []})))]
+  (let [cross-roads (->> {:tokens tokens :parsed-elements []}
+                         (consume-matching-value :keyword "class")
+                         (consume :identifier)
+                         (consume-matching-value :symbol "{"))]
+
     (if (looking-at-keyword ["constructor" "function" "method" "static" "field"] (:tokens cross-roads))
-      (:parsed-elements (consume-matching-value :symbol "}" (parse-class-body (:tokens cross-roads) (:parsed-elements cross-roads))))
+      (:parsed-elements (consume-matching-value :symbol "}" (parse-class-body cross-roads)))
       (raise "class body does not start with subroutine or variable declaration"))))
 
 (defn- handle-class [tokens]

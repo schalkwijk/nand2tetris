@@ -114,8 +114,18 @@
       (:parsed-elements (consume-matching-value :symbol "}" (parse-class-body cross-roads)))
       (raise "class body does not start with subroutine or variable declaration"))))
 
+;; No reason for this to be a special snowflake!
+;; Should just be replaced with parse-class with parse
+;; class conj'ing on the class body, like all other parse-*
 (defn- handle-class [tokens]
   [{:class (parse-class tokens)}])
 
 (defn parse-tokens [tokens]
-  (handle-class tokens))
+  (let [starting-state {:tokens tokens :parsed-elements []}](cond
+     (looking-at-keyword ["class"] tokens) (handle-class tokens)
+
+     (looking-at-keyword ["method" "function" "constructor"] tokens)
+     (:parsed-elements (parse-class-body starting-state))
+
+     (looking-at-keyword ["field" "static"] tokens)
+     (:parsed-elements (parse-class-body starting-state)))))

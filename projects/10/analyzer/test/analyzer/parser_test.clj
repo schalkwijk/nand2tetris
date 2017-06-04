@@ -79,6 +79,19 @@
       [0 :class 4 :classVarDec 4] bar
       [0 :class 4 :classVarDec 5] semicolon)))
 
+;; class Main { function int foo(int bar, Fraction baz) {} }
+(deftest handling-built-in-type-function-returns
+  (let [tokens [class-t class-name open-curly
+                method int-t method-name open-paren
+                int-t bar comma fraction baz
+                close-paren open-curly close-curly
+                close-curly]]
+    (are [path value] (= value (get-in (vec (parse-tokens tokens)) path))
+      [0 :class 3 :subroutineDec 4 :parameterList 0] int-t
+      [0 :class 3 :subroutineDec 4 :parameterList 1] bar
+      [0 :class 3 :subroutineDec 4 :parameterList 2] comma
+      [0 :class 3 :subroutineDec 4 :parameterList 3] fraction
+      [0 :class 3 :subroutineDec 4 :parameterList 4] baz)))
+
 ;; TODO
-;; handle method arguments
 ;; Handle method body

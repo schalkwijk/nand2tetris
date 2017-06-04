@@ -23,13 +23,19 @@
             (= (:type next-token) :identifier))
 
       {:tokens (rest tokens) :parsed-elements (conj parsed-elements next-token)}
-      (raise (str "Expected " type ", got " (:type next-token) " with value " (:value next-token))))))
+      (raise (str "Expected identifier or built-in type, got " (:type next-token) " with value " (:value next-token))))))
 
 (defn- consume-matching-value [type value {:keys [tokens parsed-elements]}]
   (let [next-token (first tokens)]
     (if (= next-token {:type type :value value})
       {:tokens (rest tokens) :parsed-elements (conj parsed-elements next-token)}
       (raise (str "Expected " type " with value " value ", got " (:type next-token) " with value " (:value next-token))))))
+
+(defn- optionally-consume-matching-value [type value {:keys [tokens parsed-elements]}]
+  (let [next-token (first tokens)]
+    (if (= next-token {:type type :value value})
+      {:tokens (rest tokens) :parsed-elements (conj parsed-elements next-token)}
+      {:tokens tokens :parsed-elements parsed-elements})))
 
 (defn- looking-at-keyword [potential-keywords tokens]
   (let [next-token (first tokens)]
@@ -38,7 +44,8 @@
 
 (defn- looking-at-symbol [value tokens]
   (let [next-token (first tokens)]
-    (= {:type :symbol :value value} next-token)))
+    (and (= (:value next-token) value)
+         (= (:type next-token) :symbol))))
 
 (defn- optionally-parse-more-var-decs [{:keys [tokens parsed-elements]}]
   (if (looking-at-symbol "," tokens)
@@ -56,12 +63,29 @@
        (optionally-parse-more-var-decs)
        (consume-matching-value :symbol ";")))
 
+(defn- parse-function-arguments [{:keys [tokens parsed-elements]}]
+  (if (looking-at-symbol ")" tokens)
+    {:tokens tokens :parsed-elements parsed-elements}
+    (->> {:tokens tokens :parsed-elements parsed-elements}
+        (optionally-consume-matching-value :symbol ",") ;; optional comma
+        (consume-identifier-or-built-in-type) ;; variable type
+        (consume :identifier) ;; variable name
+        recur)))
+
+(defn- optionally-parse-function-arguments [{:keys [tokens parsed-elements]}]
+  (if (looking-at-symbol ")" tokens)
+    {:tokens tokens :parsed-elements parsed-elements}
+    (let [function-arguments (parse-function-arguments {:tokens tokens :parsed-elements []})]
+      {:tokens (:tokens function-arguments)
+       :parsed-elements (conj parsed-elements {:parameterList (:parsed-elements function-arguments)})})))
+
 (defn- parse-subroutine [tokens]
   (->> {:tokens tokens :parsed-elements []}
        (consume :keyword) ;; subroutine type
        (consume-identifier-or-built-in-type) ;; return type
        (consume :identifier) ;; method name
        (consume-matching-value :symbol "(")
+       (optionally-parse-function-arguments)
        (consume-matching-value :symbol ")")
        (consume-matching-value :symbol "{")
        (consume-matching-value :symbol "}")))

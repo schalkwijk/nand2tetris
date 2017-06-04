@@ -5,6 +5,8 @@
   [collection element]
   (some #(= element %) collection))
 
+(def built-in-type-keywords ["var" "int" "char" "boolean" "void"])
+
 (defn- raise [message]
   (throw (Exception. message)))
 
@@ -14,10 +16,12 @@
       {:tokens (rest tokens) :parsed-elements (conj parsed-elements next-token)}
       (raise (str "Expected " type ", got " (:type next-token) " with value " (:value next-token))))))
 
-(defn- consume-identifier-or-keyword [keyword-value {:keys [tokens parsed-elements]}]
+(defn- consume-identifier-or-built-in-type [{:keys [tokens parsed-elements]}]
   (let [next-token (first tokens)]
-    (if (or (= next-token {:type :keyword :value keyword-value})
+    (if (or (and (= (:type next-token) :keyword)
+                 (in? built-in-type-keywords (:value next-token)))
             (= (:type next-token) :identifier))
+
       {:tokens (rest tokens) :parsed-elements (conj parsed-elements next-token)}
       (raise (str "Expected " type ", got " (:type next-token) " with value " (:value next-token))))))
 
@@ -27,17 +31,35 @@
       {:tokens (rest tokens) :parsed-elements (conj parsed-elements next-token)}
       (raise (str "Expected " type " with value " value ", got " (:type next-token) " with value " (:value next-token))))))
 
-(defn- parse-class-var-dec [] nil)
-
 (defn- looking-at-keyword [potential-keywords tokens]
   (let [next-token (first tokens)]
     (and (= (:type next-token :keyword))
          (in? potential-keywords (:value next-token)))))
 
+(defn- looking-at-symbol [value tokens]
+  (let [next-token (first tokens)]
+    (= {:type :symbol :value value} next-token)))
+
+(defn- optionally-parse-more-var-decs [{:keys [tokens parsed-elements]}]
+  (if (looking-at-symbol "," tokens)
+    (->> {:tokens tokens :parsed-elements parsed-elements}
+         (consume :symbol)
+         (consume :identifier)
+         optionally-parse-more-var-decs)
+    {:tokens tokens :parsed-elements parsed-elements}))
+
+(defn- parse-class-var-dec [tokens]
+  (->> {:tokens tokens :parsed-elements []}
+       (consume :keyword) ;; field / static
+       (consume-identifier-or-built-in-type) ;; variable type
+       (consume :identifier) ;; variable name
+       (optionally-parse-more-var-decs)
+       (consume-matching-value :symbol ";")))
+
 (defn- parse-subroutine [tokens]
   (->> {:tokens tokens :parsed-elements []}
        (consume :keyword) ;; subroutine type
-       (consume-identifier-or-keyword "void") ;; return type
+       (consume-identifier-or-built-in-type) ;; return type
        (consume :identifier) ;; method name
        (consume-matching-value :symbol "(")
        (consume-matching-value :symbol ")")
@@ -51,7 +73,11 @@
       (recur {:tokens (:tokens subroutine) :parsed-elements
               (conj parsed-elements {:subroutineDec (:parsed-elements subroutine)})}))
 
-    (looking-at-keyword ["static" "field"] tokens) (parse-class-var-dec)
+    (looking-at-keyword ["static" "field"] tokens)
+    (let [class-var-dec (parse-class-var-dec tokens)]
+      (recur {:tokens (:tokens class-var-dec) :parsed-elements
+              (conj parsed-elements {:classVarDec (:parsed-elements class-var-dec)})}))
+
     :else {:tokens tokens :parsed-elements parsed-elements}))
 
 (defn- parse-class [tokens]

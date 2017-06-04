@@ -68,4 +68,4 @@
     (map #(identify-token % interned-strings) instruction-bits)))
 
 (defn tokenize-instructions [instructions]
-  (map tokenize-instruction (split-and-strip-instructions instructions)))
+  (flatten (map tokenize-instruction (split-and-strip-instructions instructions))))

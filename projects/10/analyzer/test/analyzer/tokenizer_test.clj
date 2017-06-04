@@ -89,42 +89,42 @@
 
 (deftest handling-multiline-entries
   (let [instructions ["class Main {", "function void main() {", " var Array a;", "}"]]
-    (are [value instruction-number token-number]
-        (= value (nth (nth (tokenize-instructions instructions) instruction-number) token-number))
-        {:type :keyword :value "class"} 0 0
-        {:type :identifier :value "Main"} 0 1
-        {:type :symbol :value "{"} 0 2
-        {:type :keyword :value "function"} 1 0
-        {:type :keyword :value "void"} 1 1
-        {:type :identifier :value "main"} 1 2
-        {:type :symbol :value "("} 1 3
-        {:type :symbol :value ")"} 1 4
-        {:type :symbol :value "{"} 1 5
-        {:type :keyword :value "var"} 2 0
-        {:type :identifier :value "Array"} 2 1
-        {:type :identifier :value "a"} 2 2
-        {:type :symbol :value ";"} 2 3
-        {:type :symbol :value "}"} 3 0)))
+    (are [value token-number]
+        (= value (nth (tokenize-instructions instructions) token-number))
+        {:type :keyword :value "class"} 0
+        {:type :identifier :value "Main"} 1
+        {:type :symbol :value "{"} 2
+        {:type :keyword :value "function"} 3
+        {:type :keyword :value "void"} 4
+        {:type :identifier :value "main"} 5
+        {:type :symbol :value "("} 6
+        {:type :symbol :value ")"} 7
+        {:type :symbol :value "{"} 8
+        {:type :keyword :value "var"} 9
+        {:type :identifier :value "Array"} 10
+        {:type :identifier :value "a"} 11
+        {:type :symbol :value ";"} 12
+        {:type :symbol :value "}"} 13)))
 
 (deftest handling-comments-at-beginning-of-line
   (let [instructions ["//Test", "/** Longer Comment */", "class Main {", "function void main() {", "var Array a;", "}"]]
-    (are [value instruction-number token-number]
-        (= value (nth (nth (tokenize-instructions instructions) instruction-number) token-number))
-      {:type :keyword :value "class"} 0 0
-      {:type :identifier :value "Main"} 0 1
-      {:type :symbol :value "{"} 0 2
-      {:type :keyword :value "function"} 1 0
-      {:type :keyword :value "void"} 1 1
-      {:type :identifier :value "main"} 1 2
-      {:type :symbol :value "("} 1 3
-      {:type :symbol :value ")"} 1 4
-      {:type :symbol :value "{"} 1 5
-      {:type :keyword :value "var"} 2 0
-      {:type :identifier :value "Array"} 2 1
-      {:type :identifier :value "a"} 2 2
-      {:type :symbol :value ";"} 2 3
-      {:type :symbol :value "}"} 3 0)))
+    (are [value token-number]
+        (= value (nth (tokenize-instructions instructions) token-number))
+      {:type :keyword :value "class"} 0
+      {:type :identifier :value "Main"} 1
+      {:type :symbol :value "{"} 2
+      {:type :keyword :value "function"} 3
+      {:type :keyword :value "void"} 4
+      {:type :identifier :value "main"} 5
+      {:type :symbol :value "("} 6
+      {:type :symbol :value ")"} 7
+      {:type :symbol :value "{"} 8
+      {:type :keyword :value "var"} 9
+      {:type :identifier :value "Array"} 10
+      {:type :identifier :value "a"} 11
+      {:type :symbol :value ";"} 12
+      {:type :symbol :value "}"} 13)))
 
 (deftest handling-comments-after-code
   (let [instructions ["class Main {", "function void main() {", " var Array a; // random var", "}"]]
-    (is (= 4 (count (nth (tokenize-instructions instructions) 2))))))
+    (is (= 14 (count (tokenize-instructions instructions))))))

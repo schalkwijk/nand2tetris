@@ -17,7 +17,7 @@
 
 (deftest outputting-simple-class-parse-tree
   (let [jack-code ["class Main { method void foo() {} }"]
-        parse-tree (parse-tokens (flatten (tokenize-instructions jack-code)))]
+        parse-tree (parse-tokens (tokenize-instructions jack-code))]
     (are [location value]
         (= value (get-in (parse-xml (with-out-str (output-parse-tree parse-tree))) location))
       [:tag] :class

@@ -45,7 +45,6 @@
       [0 :class 3 :subroutineDec 2] method-name)))
 
 ;; TODO
-;; make tokenize-instructions not need to be flattened
 ;; Handle variable declarations in class
 ;; handle method arguments
 ;; Handle method body

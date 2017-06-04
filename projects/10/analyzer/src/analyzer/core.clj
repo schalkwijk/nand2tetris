@@ -10,7 +10,7 @@
         output-filename (str (System/getProperty "user.dir") "/" xml-filename)]
     (with-open [rdr (io/reader filename)]
       (with-open [wrtr (io/writer output-filename)]
-        (.write wrtr (with-out-str (output-tokens (flatten (tokenize-instructions (line-seq rdr))))))))))
+        (.write wrtr (with-out-str (output-tokens (tokenize-instructions (line-seq rdr)))))))))
 
 (defn- extract-jack-files-from-directory [directory]
   (filter #(re-matches #".*\.jack" (.getName %)) (.listFiles directory)))

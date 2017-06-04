@@ -38,10 +38,11 @@
       [:content 3 :content 3 :content 0] " ( "
       [:content 3 :content 4 :tag] :symbol
       [:content 3 :content 4 :content 0] " ) "
-      [:content 3 :content 5 :tag] :symbol
-      [:content 3 :content 5 :content 0] " { "
-      [:content 3 :content 6 :tag] :symbol
-      [:content 3 :content 6 :content 0] " } "
+      [:content 3 :content 5 :tag] :subroutineBody
+      [:content 3 :content 5 :content 0 :tag] :symbol
+      [:content 3 :content 5 :content 0 :content 0] " { "
+      [:content 3 :content 5 :content 1 :tag] :symbol
+      [:content 3 :content 5 :content 1 :content 0] " } "
       [:content 4 :tag] :symbol
       [:content 4 :content 0] " } ")))
 

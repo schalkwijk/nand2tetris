@@ -24,8 +24,9 @@
 (def bar (create-token :identifier "bar"))
 (def baz (create-token :identifier "foo"))
 (def comma (create-token :symbol ","))
+(def var (create-token :keyword "var"))
 
-;; class Main { function Fraction foo() {} }
+;; class Main { method Fraction foo() {} }
 (deftest handling-function-declarations
   (let [tokens [class-t class-name open-curly method fraction method-name
                 open-paren close-paren open-curly close-curly close-curly]]
@@ -38,11 +39,11 @@
       [0 :class 3 :subroutineDec 2] method-name
       [0 :class 3 :subroutineDec 3] open-paren
       [0 :class 3 :subroutineDec 4] close-paren
-      [0 :class 3 :subroutineDec 5] open-curly
-      [0 :class 3 :subroutineDec 6] close-curly
+      [0 :class 3 :subroutineDec 5 :subroutineBody 0] open-curly
+      [0 :class 3 :subroutineDec 5 :subroutineBody 1] close-curly
       [0 :class 4] close-curly)))
 
-;; class Main { function void foo() {} }
+;; class Main { method void foo() {} }
 (deftest handling-void-function-returns
   (let [tokens [class-t class-name open-curly method void method-name
                 open-paren close-paren open-curly close-curly close-curly]]
@@ -51,7 +52,7 @@
       [0 :class 3 :subroutineDec 1] void
       [0 :class 3 :subroutineDec 2] method-name)))
 
-;; class Main { function int foo() {} }
+;; class Main { method int foo() {} }
 (deftest handling-built-in-type-function-returns
   (let [tokens [class-t class-name open-curly
                 method int-t method-name open-paren close-paren open-curly close-curly
@@ -61,7 +62,7 @@
       [0 :class 3 :subroutineDec 1] int-t
       [0 :class 3 :subroutineDec 2] method-name)))
 
-;; class Main { field Fraction baz; static int foo, bar; }
+;; class Main { method Fraction baz; static int foo, bar; }
 (deftest handling-class-level-variable-declarations
   (let [tokens [class-t class-name open-curly
                 field fraction baz semicolon
@@ -79,7 +80,7 @@
       [0 :class 4 :classVarDec 4] bar
       [0 :class 4 :classVarDec 5] semicolon)))
 
-;; class Main { function int foo(int bar, Fraction baz) {} }
+;; class Main { method int foo(int bar, Fraction baz) {} }
 (deftest handling-built-in-type-function-returns
   (let [tokens [class-t class-name open-curly
                 method int-t method-name open-paren
@@ -93,5 +94,30 @@
       [0 :class 3 :subroutineDec 4 :parameterList 3] fraction
       [0 :class 3 :subroutineDec 4 :parameterList 4] baz)))
 
+;; method int foo() { var int bar, baz; var Fraction foo; }
+(deftest handling-function-variable-declarations
+  (let [tokens [method int-t method-name open-paren close-paren open-curly
+                var int-t bar comma baz semicolon
+                var fraction foo semicolon
+                close-curly]]
+    (are [path value] (= value (get-in (vec (parse-tokens tokens)) path))
+      [0 :subroutineDec 5 :subroutineBody 0] open-curly
+      [0 :subroutineDec 5 :subroutineBody 1 :varDec 0] var
+      [0 :subroutineDec 5 :subroutineBody 1 :varDec 1] int-t
+      [0 :subroutineDec 5 :subroutineBody 1 :varDec 2] bar
+      [0 :subroutineDec 5 :subroutineBody 1 :varDec 3] comma
+      [0 :subroutineDec 5 :subroutineBody 1 :varDec 4] baz
+      [0 :subroutineDec 5 :subroutineBody 1 :varDec 5] semicolon
+      [0 :subroutineDec 5 :subroutineBody 2 :varDec 0] var
+      [0 :subroutineDec 5 :subroutineBody 2 :varDec 1] fraction
+      [0 :subroutineDec 5 :subroutineBody 2 :varDec 2] foo
+      [0 :subroutineDec 5 :subroutineBody 2 :varDec 3] semicolon
+      [0 :subroutineDec 5 :subroutineBody 3] close-curly)))
+
 ;; TODO
 ;; Handle method body
+;; handle simple let
+;; handle let with array on LHS
+;; handle let with array on RHS
+;; handle let with method call on RHS
+;; test for multiple method declarations in class

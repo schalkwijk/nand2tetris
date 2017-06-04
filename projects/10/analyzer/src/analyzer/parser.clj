@@ -35,7 +35,14 @@
          (in? potential-keywords (:value next-token)))))
 
 (defn- parse-subroutine [tokens]
-  (consume-matching-value :symbol "}" (consume-matching-value :symbol "{" (consume-matching-value :symbol ")" (consume-matching-value :symbol "(" (consume :identifier (consume-identifier-or-keyword "void" (consume :keyword {:tokens tokens :parsed-elements []}))))))))
+  (->> {:tokens tokens :parsed-elements []}
+       (consume :keyword) ;; subroutine type
+       (consume-identifier-or-keyword "void") ;; return type
+       (consume :identifier) ;; method name
+       (consume-matching-value :symbol "(")
+       (consume-matching-value :symbol ")")
+       (consume-matching-value :symbol "{")
+       (consume-matching-value :symbol "}")))
 
 (defn- parse-class-body [tokens parsed-elements]
   (cond

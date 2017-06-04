@@ -48,4 +48,3 @@
 ;; print basic example to see if you can properly construct XML
 ;; Handle variable declarations in class
 ;; Handle method body
-;; use threading macros

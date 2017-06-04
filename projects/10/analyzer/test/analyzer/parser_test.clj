@@ -46,7 +46,6 @@
 
 ;; TODO
 ;; make tokenize-instructions not need to be flattened
-;; make sure the tokenizer can handle negative numbers
 ;; Handle variable declarations in class
 ;; handle method arguments
 ;; Handle method body

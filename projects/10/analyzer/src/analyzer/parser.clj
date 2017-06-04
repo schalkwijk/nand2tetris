@@ -8,13 +8,20 @@
 (defn- raise [message]
   (throw (Exception. message)))
 
-(defn- consume-without-value [type {:keys [tokens parsed-elements]}]
+(defn- consume [type {:keys [tokens parsed-elements]}]
   (let [next-token (first tokens)]
     (if (= (:type next-token) type)
       {:tokens (rest tokens) :parsed-elements (conj parsed-elements next-token)}
       (raise (str "Expected " type ", got " (:type next-token) " with value " (:value next-token))))))
 
-(defn- consume [type value {:keys [tokens parsed-elements]}]
+(defn- consume-identifier-or-keyword [keyword-value {:keys [tokens parsed-elements]}]
+  (let [next-token (first tokens)]
+    (if (or (= next-token {:type :keyword :value keyword-value})
+            (= (:type next-token) :identifier))
+      {:tokens (rest tokens) :parsed-elements (conj parsed-elements next-token)}
+      (raise (str "Expected " type ", got " (:type next-token) " with value " (:value next-token))))))
+
+(defn- consume-matching-value [type value {:keys [tokens parsed-elements]}]
   (let [next-token (first tokens)]
     (if (= next-token {:type type :value value})
       {:tokens (rest tokens) :parsed-elements (conj parsed-elements next-token)}
@@ -28,7 +35,7 @@
          (in? potential-keywords (:value next-token)))))
 
 (defn- parse-subroutine [tokens]
-  (consume :symbol "}" (consume :symbol "{" (consume :symbol ")" (consume :symbol "(" (consume-without-value :identifier (consume-without-value :identifier (consume-without-value :keyword {:tokens tokens :parsed-elements []}))))))))
+  (consume-matching-value :symbol "}" (consume-matching-value :symbol "{" (consume-matching-value :symbol ")" (consume-matching-value :symbol "(" (consume :identifier (consume-identifier-or-keyword "void" (consume :keyword {:tokens tokens :parsed-elements []}))))))))
 
 (defn- parse-class-body [tokens parsed-elements]
   (cond
@@ -40,9 +47,9 @@
     :else {:tokens tokens :parsed-elements parsed-elements}))
 
 (defn- parse-class [tokens]
-  (let [cross-roads (consume :symbol "{" (consume-without-value :identifier (consume :keyword "class" {:tokens tokens :parsed-elements []})))]
+  (let [cross-roads (consume-matching-value :symbol "{" (consume :identifier (consume-matching-value :keyword "class" {:tokens tokens :parsed-elements []})))]
     (if (looking-at-keyword ["constructor" "function" "method" "static" "field"] (:tokens cross-roads))
-      (:parsed-elements (consume :symbol "}" (parse-class-body (:tokens cross-roads) (:parsed-elements cross-roads))))
+      (:parsed-elements (consume-matching-value :symbol "}" (parse-class-body (:tokens cross-roads) (:parsed-elements cross-roads))))
       (raise "class body does not start with subroutine or variable declaration"))))
 
 (defn- handle-class [tokens]

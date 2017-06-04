@@ -2,7 +2,7 @@ jar = analyzer-0.1.0-SNAPSHOT-standalone.jar
 project = 10
 script = JackAnalyzer
 
-JackAnalyzer: uberjar
+$(script):
 	echo "#!/bin/bash\njava" -jar $(jar) "\$$@" > $(script)
 	chmod +x $(script)
 
@@ -12,7 +12,7 @@ clean:
 uberjar:
 	cd analyzer && lein uberjar && cp target/$(jar) ..
 
-test-all:
+test-all: uberjar $(script)
 	for dir in $(shell find . -mindepth 1 -maxdepth 1 -type d -and -not -name "analyzer"); do \
 		find $$dir -name "*jack" -exec ./JackAnalyzer \{\} \; ;\
 		find $$dir -name "*T.xml" -exec ../../tools/TextComparer.sh \{\} $$(pwd)/$$(basename \{\}) \; ;\

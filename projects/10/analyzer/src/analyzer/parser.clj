@@ -104,28 +104,23 @@
 
     :else {:tokens tokens :parsed-elements parsed-elements}))
 
-(defn- parse-class [tokens]
+(defn- parse-class [{:keys [tokens parsed-elements]}]
   (let [cross-roads (->> {:tokens tokens :parsed-elements []}
                          (consume-matching-value :keyword "class")
                          (consume :identifier)
                          (consume-matching-value :symbol "{"))]
 
     (if (looking-at-keyword ["constructor" "function" "method" "static" "field"] (:tokens cross-roads))
-      (:parsed-elements (consume-matching-value :symbol "}" (parse-class-body cross-roads)))
+      (let [class-elements (consume-matching-value :symbol "}" (parse-class-body cross-roads))]
+        {:tokens (:tokens class-elements) :parsed-elements
+         (conj parsed-elements {:class (:parsed-elements class-elements)})})
       (raise "class body does not start with subroutine or variable declaration"))))
 
-;; No reason for this to be a special snowflake!
-;; Should just be replaced with parse-class with parse
-;; class conj'ing on the class body, like all other parse-*
-(defn- handle-class [tokens]
-  [{:class (parse-class tokens)}])
-
 (defn parse-tokens [tokens]
-  (let [starting-state {:tokens tokens :parsed-elements []}](cond
-     (looking-at-keyword ["class"] tokens) (handle-class tokens)
+  (let [starting-state {:tokens tokens :parsed-elements []}]
+    (cond
+      (looking-at-keyword ["class"] tokens)
+      (:parsed-elements (parse-class starting-state))
 
-     (looking-at-keyword ["method" "function" "constructor"] tokens)
-     (:parsed-elements (parse-class-body starting-state))
-
-     (looking-at-keyword ["field" "static"] tokens)
-     (:parsed-elements (parse-class-body starting-state)))))
+      (looking-at-keyword ["method" "function" "constructor" "field" "static"] tokens)
+      (:parsed-elements (parse-class-body starting-state)))))

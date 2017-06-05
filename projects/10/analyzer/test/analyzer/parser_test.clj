@@ -20,10 +20,12 @@
 (def semicolon (create-token :symbol ";"))
 (def static (create-token :keyword "static"))
 (def field (create-token :keyword "field"))
+(def do (create-token :keyword "do"))
 (def foo (create-token :identifier "foo"))
 (def bar (create-token :identifier "bar"))
 (def baz (create-token :identifier "foo"))
 (def comma (create-token :symbol ","))
+(def period (create-token :symbol "."))
 (def var (create-token :keyword "var"))
 
 ;; class Main { method Fraction foo() {} }
@@ -114,10 +116,25 @@
       [0 :subroutineDec 5 :subroutineBody 2 :varDec 3] semicolon
       [0 :subroutineDec 5 :subroutineBody 3] close-curly)))
 
+;; { do foo.bar(); }
+(deftest handling-simple-function-calls
+  (let [tokens [open-curly
+                do foo period bar open-paren close-paren semicolon
+                close-curly]]
+    (are [path value] (= value (get-in (vec (parse-tokens tokens)) path))
+      [0 :subroutineBody 1 :doStatement 0] do
+      [0 :subroutineBody 1 :doStatement 1] foo
+      [0 :subroutineBody 1 :doStatement 2] period
+      [0 :subroutineBody 1 :doStatement 3] bar
+      [0 :subroutineBody 1 :doStatement 4] open-paren
+      [0 :subroutineBody 1 :doStatement 5] close-paren
+      [0 :subroutineBody 1 :doStatement 6] semicolon
+      )))
+
 ;; TODO
 ;; Handle method body
-;; handle simple let
+;; handle do
+;; handle let with method call on RHS
 ;; handle let with array on LHS
 ;; handle let with array on RHS
-;; handle let with method call on RHS
 ;; test for multiple method declarations in class

@@ -47,6 +47,10 @@
     (and (= (:value next-token) value)
          (= (:type next-token) :symbol))))
 
+(defn- combine-under-attribute [attribute old-state new-state]
+  {:tokens (:tokens new-state)
+   :parsed-elements (conj (:parsed-elements old-state) {attribute (:parsed-elements new-state)})})
+
 (defn- optionally-parse-more-var-decs [{:keys [tokens parsed-elements]}]
   (if (looking-at-symbol "," tokens)
     (->> {:tokens tokens :parsed-elements parsed-elements}
@@ -82,10 +86,43 @@
       (optionally-parse-subroutine-var-dec {:tokens (:tokens subroutine-var-dec)
         :parsed-elements (conj parsed-elements {:varDec (:parsed-elements subroutine-var-dec)})}))))
 
+(defn- parse-do-statement [{:keys [tokens parsed-elements]}]
+  (combine-under-attribute
+   :doStatement
+   {:tokens tokens :parsed-elements parsed-elements}
+   (->> {:tokens tokens :parsed-elements []}
+        (consume-matching-value :keyword "do")
+        (consume :identifier)
+        (consume-matching-value :symbol ".")
+        (consume :identifier)
+        (consume-matching-value :symbol "(")
+        (consume-matching-value :symbol ")")
+        (consume-matching-value :symbol ";"))))
+
+(defn- parse-subroutine-statements [{:keys [tokens parsed-elements]}]
+  (cond
+    (looking-at-keywords ["do"] tokens)
+    (parse-do-statement {:tokens tokens :parsed-elements parsed-elements})
+
+    (looking-at-keywords ["let"] tokens)
+    {:tokens tokens :parsed-elements parsed-elements}
+
+    (looking-at-keywords ["if"] tokens)
+    {:tokens tokens :parsed-elements parsed-elements}
+
+    (looking-at-keywords ["while"] tokens)
+    {:tokens tokens :parsed-elements parsed-elements}
+
+    (looking-at-keywords ["return"] tokens)
+    {:tokens tokens :parsed-elements parsed-elements}
+
+    :else {:tokens tokens :parsed-elements parsed-elements}))
+
 (defn- parse-subroutine-body [{:keys [tokens parsed-elements]}]
   (let [subroutine-body (->> {:tokens tokens :parsed-elements []}
                              (consume-matching-value :symbol "{")
                              (optionally-parse-subroutine-var-dec)
+                             (parse-subroutine-statements)
                              (consume-matching-value :symbol "}"))]
     {:tokens (:tokens subroutine-body)
      :parsed-elements (conj parsed-elements {:subroutineBody (:parsed-elements subroutine-body)})}))
@@ -149,4 +186,7 @@
       (:parsed-elements (parse-class starting-state))
 
       (looking-at-keywords ["method" "function" "constructor" "field" "static"] tokens)
-      (:parsed-elements (parse-class-body starting-state)))))
+      (:parsed-elements (parse-class-body starting-state))
+
+      (looking-at-symbol "{" tokens)
+      (:parsed-elements (parse-subroutine-body starting-state)))))

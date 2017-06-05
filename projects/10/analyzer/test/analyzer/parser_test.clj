@@ -132,8 +132,7 @@
       )))
 
 ;; TODO
-;; Handle method body
-;; handle do
+;; handle do with expressions in call
 ;; handle let with method call on RHS
 ;; handle let with array on LHS
 ;; handle let with array on RHS

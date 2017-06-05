@@ -78,25 +78,23 @@
 (defn- optionally-parse-subroutine-var-dec [{:keys [tokens parsed-elements]}]
   (if (not (looking-at-keywords ["var"] tokens))
     {:tokens tokens :parsed-elements parsed-elements}
-    (let [subroutine-var-dec (->> {:tokens tokens :parsed-elements []}
-                                  (consume-matching-value :keyword "var")
-                                  (consume-identifier-or-built-in-type)
-                                  (parse-subroutine-var-dec))]
-
-      (optionally-parse-subroutine-var-dec (combine-under-attribute :varDec {:parsed-elements parsed-elements} subroutine-var-dec)))))
+    (->> {:tokens tokens :parsed-elements []}
+         (consume-matching-value :keyword "var")
+         (consume-identifier-or-built-in-type)
+         (parse-subroutine-var-dec)
+         (combine-under-attribute :varDec {:parsed-elements parsed-elements})
+         recur)))
 
 (defn- parse-do-statement [{:keys [tokens parsed-elements]}]
-  (combine-under-attribute
-   :doStatement
-   {:parsed-elements parsed-elements}
-   (->> {:tokens tokens :parsed-elements []}
-        (consume-matching-value :keyword "do")
-        (consume :identifier)
-        (consume-matching-value :symbol ".")
-        (consume :identifier)
-        (consume-matching-value :symbol "(")
-        (consume-matching-value :symbol ")")
-        (consume-matching-value :symbol ";"))))
+  (->> {:tokens tokens :parsed-elements []}
+       (consume-matching-value :keyword "do")
+       (consume :identifier)
+       (consume-matching-value :symbol ".")
+       (consume :identifier)
+       (consume-matching-value :symbol "(")
+       (consume-matching-value :symbol ")")
+       (consume-matching-value :symbol ";")
+       (combine-under-attribute :doStatement {:parsed-elements parsed-elements})))
 
 (defn- parse-subroutine-statements [{:keys [tokens parsed-elements]}]
   (cond
@@ -118,12 +116,12 @@
     :else {:tokens tokens :parsed-elements parsed-elements}))
 
 (defn- parse-subroutine-body [{:keys [tokens parsed-elements]}]
-  (let [subroutine-body (->> {:tokens tokens :parsed-elements []}
-                             (consume-matching-value :symbol "{")
-                             (optionally-parse-subroutine-var-dec)
-                             (parse-subroutine-statements)
-                             (consume-matching-value :symbol "}"))]
-    (combine-under-attribute :subroutineBody {:parsed-elements parsed-elements} subroutine-body)))
+  (->> {:tokens tokens :parsed-elements []}
+       (consume-matching-value :symbol "{")
+       (optionally-parse-subroutine-var-dec)
+       (parse-subroutine-statements)
+       (consume-matching-value :symbol "}")
+       (combine-under-attribute :subroutineBody {:parsed-elements parsed-elements})))
 
 (defn- parse-function-arguments [{:keys [tokens parsed-elements]}]
   (if (looking-at-symbol ")" tokens)
@@ -137,8 +135,9 @@
 (defn- optionally-parse-function-arguments [{:keys [tokens parsed-elements]}]
   (if (looking-at-symbol ")" tokens)
     {:tokens tokens :parsed-elements parsed-elements}
-    (let [function-arguments (parse-function-arguments {:tokens tokens :parsed-elements []})]
-      (combine-under-attribute :parameterList {:parsed-elements parsed-elements} function-arguments))))
+    (->> {:tokens tokens :parsed-elements []}
+         parse-function-arguments
+         (combine-under-attribute :parameterList {:parsed-elements parsed-elements}))))
 
 (defn- parse-subroutine [tokens]
   (->> {:tokens tokens :parsed-elements []}
@@ -153,12 +152,10 @@
 (defn- parse-class-body [{:keys [tokens parsed-elements]}]
   (cond
     (looking-at-keywords ["constructor" "function" "method"] tokens)
-    (let [subroutine (parse-subroutine tokens)]
-      (recur (combine-under-attribute :subroutineDec {:parsed-elements parsed-elements} subroutine)))
+    (recur (combine-under-attribute :subroutineDec {:parsed-elements parsed-elements} (parse-subroutine tokens)))
 
     (looking-at-keywords ["static" "field"] tokens)
-    (let [class-var-dec (parse-class-var-dec tokens)]
-      (recur (combine-under-attribute :classVarDec {:parsed-elements parsed-elements} class-var-dec)))
+    (recur (combine-under-attribute :classVarDec {:parsed-elements parsed-elements} (parse-class-var-dec tokens)))
 
     :else {:tokens tokens :parsed-elements parsed-elements}))
 
@@ -169,8 +166,10 @@
                          (consume-matching-value :symbol "{"))]
 
     (if (looking-at-keywords ["constructor" "function" "method" "static" "field"] (:tokens cross-roads))
-      (let [class-elements (consume-matching-value :symbol "}" (parse-class-body cross-roads))]
-        (combine-under-attribute :class {:parsed-elements parsed-elements} class-elements))
+      (->> cross-roads
+           parse-class-body
+           (consume-matching-value :symbol "}")
+           (combine-under-attribute :class {:parsed-elements parsed-elements}))
       (raise "class body does not start with subroutine or variable declaration"))))
 
 (defn parse-tokens [tokens]

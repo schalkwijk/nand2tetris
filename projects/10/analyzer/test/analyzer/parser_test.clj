@@ -9,6 +9,8 @@
 (def class-name (create-token :identifier "Main"))
 (def open-curly (create-token :symbol "{"))
 (def close-curly (create-token :symbol "}"))
+(def open-square (create-token :symbol "["))
+(def close-square (create-token :symbol "]"))
 (def open-paren (create-token :symbol "("))
 (def close-paren (create-token :symbol ")"))
 (def method (create-token :keyword "method"))
@@ -204,8 +206,22 @@
       [0 :subroutineBody 1 :letStatement 4] semicolon
       [0 :subroutineBody 2] close-curly)))
 
+;; { let foo[bar / 3] = baz; }
+(deftest handling-let-statements
+  (let [tokens [open-curly l-token foo open-square
+                bar divide constant close-square equal-t baz
+                semicolon close-curly]]
+    (are [path value] (= value (get-in (vec (parse-tokens tokens)) path))
+      [0 :subroutineBody 1 :letStatement 0] l-token
+      [0 :subroutineBody 1 :letStatement 1] foo
+      [0 :subroutineBody 1 :letStatement 2] open-square
+      [0 :subroutineBody 1 :letStatement 3 :expression 0 :term 0] bar
+      [0 :subroutineBody 1 :letStatement 3 :expression 1] divide
+      [0 :subroutineBody 1 :letStatement 3 :expression 2 :term 0] constant
+      [0 :subroutineBody 1 :letStatement 4] close-square
+      [0 :subroutineBody 1 :letStatement 5] equal-t)))
+
 ;; TODO
-;; handle let with array on LHS
 ;; handle let with array on RHS
 ;; handle varName '[' expression ']' | subroutineCall | '(' expression ')' | unaryOp term within term
 ;; test for multiple method declarations in class

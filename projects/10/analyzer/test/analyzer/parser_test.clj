@@ -31,6 +31,7 @@
 (def comma (create-token :symbol ","))
 (def period (create-token :symbol "."))
 (def divide (create-token :symbol "/"))
+(def plus (create-token :symbol "+"))
 (def equal-t (create-token :symbol "="))
 (def constant (create-token :integerConstant "3"))
 (def var (create-token :keyword "var"))
@@ -207,7 +208,7 @@
       [0 :subroutineBody 2] close-curly)))
 
 ;; { let foo[bar / 3] = baz; }
-(deftest handling-let-statements
+(deftest handling-let-statements-with-array-accessing-on-LHS
   (let [tokens [open-curly l-token foo open-square
                 bar divide constant close-square equal-t baz
                 semicolon close-curly]]
@@ -221,7 +222,24 @@
       [0 :subroutineBody 1 :letStatement 4] close-square
       [0 :subroutineBody 1 :letStatement 5] equal-t)))
 
+;; { let foo = 3 + bar[baz]; }
+(deftest handling-let-statements-with-array-accessing-on-LHS
+  (let [tokens [open-curly l-token foo equal-t
+                constant plus bar open-square baz close-square
+                semicolon close-curly]]
+    (are [path value] (= value (get-in (vec (parse-tokens tokens)) path))
+      [0 :subroutineBody 1 :letStatement 0] l-token
+      [0 :subroutineBody 1 :letStatement 1] foo
+      [0 :subroutineBody 1 :letStatement 2] equal-t
+      [0 :subroutineBody 1 :letStatement 3 :expression 0 :term 0] constant
+      [0 :subroutineBody 1 :letStatement 3 :expression 1] plus
+      [0 :subroutineBody 1 :letStatement 3 :expression 2 :term 0] bar
+      [0 :subroutineBody 1 :letStatement 3 :expression 2 :term 1] open-square
+      [0 :subroutineBody 1 :letStatement 3 :expression 2 :term 2 :expression 0 :term 0] baz
+      [0 :subroutineBody 1 :letStatement 3 :expression 2 :term 3] close-square
+      [0 :subroutineBody 1 :letStatement 4] semicolon)))
+
 ;; TODO
 ;; handle let with array on RHS
-;; handle varName '[' expression ']' | subroutineCall | '(' expression ')' | unaryOp term within term
+;; handle varName '[' expression ']' | '(' expression ')' | unaryOp term
 ;; test for multiple method declarations in class

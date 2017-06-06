@@ -1,6 +1,7 @@
 (ns analyzer.parser)
 
 (declare parse-subroutine-call)
+(declare parse-array-access-expression)
 
 (defn- in?
   "True if collection contains element"
@@ -130,6 +131,9 @@
     (looking-at-identifier-and-symbols ["(" "."] tokens)
     (parse-subroutine-call {:tokens tokens :parsed-elements parsed-elements})
 
+    (looking-at-identifier-and-symbols ["["] tokens)
+    (parse-array-access-expression (consume :identifier {:tokens tokens :parsed-elements parsed-elements}))
+
     :else (consume :identifier {:tokens tokens :parsed-elements parsed-elements})))
 
 (defn- parse-expression [{:keys [tokens parsed-elements]}]
@@ -171,16 +175,16 @@
        (optionally-parse-expression-list)
        (consume-matching-value :symbol ")")))
 
-(defn- consume-array-access-expression [{:keys [tokens parsed-elements]}]
+(defn- parse-array-access-expression [{:keys [tokens parsed-elements]}]
   (->> {:tokens tokens :parsed-elements parsed-elements}
        (consume-matching-value :symbol "[")
        (parse-expression-and-combine)
        (consume-matching-value :symbol "]")))
 
-(defn- optionally-consume-array-access-expression [{:keys [tokens parsed-elements]}]
+(defn- optionally-parse-array-access-expression [{:keys [tokens parsed-elements]}]
   (if (not (looking-at-symbol "[" tokens))
     {:tokens tokens :parsed-elements parsed-elements}
-    (consume-array-access-expression {:tokens tokens :parsed-elements parsed-elements})))
+    (parse-array-access-expression {:tokens tokens :parsed-elements parsed-elements})))
 
 (defn- parse-subroutine-statements [{:keys [tokens parsed-elements]}]
   (cond
@@ -195,7 +199,7 @@
     (->> {:tokens tokens :parsed-elements []}
          (consume-matching-value :keyword "let")
          (consume :identifier)
-         (optionally-consume-array-access-expression)
+         (optionally-parse-array-access-expression)
          (consume-matching-value :symbol "=")
          (parse-expression-and-combine)
          (consume-matching-value :symbol ";")

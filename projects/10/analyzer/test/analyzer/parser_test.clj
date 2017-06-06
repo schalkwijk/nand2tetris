@@ -162,6 +162,27 @@
       [0 :subroutineBody 1 :doStatement 6] close-paren
       [0 :subroutineBody 1 :doStatement 7] semicolon)))
 
+;; { do foo(bar(baz / 3)); }
+(deftest handling-function-calls-within-function-calls
+  (let [tokens [open-curly
+                do foo open-paren
+                baz open-paren baz divide constant close-paren
+                close-paren semicolon
+                close-curly]]
+    (are [path value] (= value (get-in (vec (parse-tokens tokens)) path))
+      [0 :subroutineBody 1 :doStatement 0] do
+      [0 :subroutineBody 1 :doStatement 1] foo
+      [0 :subroutineBody 1 :doStatement 2] open-paren
+      [0 :subroutineBody 1 :doStatement 3 :expressionList 0 :expression 0 :term 0] baz
+      [0 :subroutineBody 1 :doStatement 3 :expressionList 0 :expression 0 :term 1] open-paren
+      [0 :subroutineBody 1 :doStatement 3 :expressionList 0 :expression 0 :term 2 :expressionList 0 :expression 0 :term 0] baz
+      [0 :subroutineBody 1 :doStatement 3 :expressionList 0 :expression 0 :term 2 :expressionList 0 :expression 1] divide
+      [0 :subroutineBody 1 :doStatement 3 :expressionList 0 :expression 0 :term 2 :expressionList 0 :expression 2 :term 0] constant
+      [0 :subroutineBody 1 :doStatement 3 :expressionList 0 :expression 0 :term 3] close-paren
+      [0 :subroutineBody 1 :doStatement 4] close-paren
+      [0 :subroutineBody 1 :doStatement 5] semicolon
+      [0 :subroutineBody 2] close-curly)))
+
 ;; TODO
 ;; handle varName '[' expression ']' | subroutineCall | '(' expression ')' | unaryOp term within term
 ;; handle let with method call on RHS

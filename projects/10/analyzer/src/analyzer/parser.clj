@@ -1,5 +1,7 @@
 (ns analyzer.parser)
 
+(declare parse-subroutine-call)
+
 (defn- in?
   "True if collection contains element"
   [collection element]
@@ -69,6 +71,13 @@
     (and (= (:value next-token) value)
          (= (:type next-token) :symbol))))
 
+(defn- looking-at-identifier-and-symbols [symbols tokens]
+  (let [next-token (first tokens)
+        next-next-token (nth tokens 1)]
+    (and (= (:type next-token) :identifier)
+         (and (= (:type next-next-token) :symbol)
+              (in? symbols (:value next-next-token))))))
+
 (defn- combine-under-attribute [attribute old-state new-state]
   {:tokens (:tokens new-state)
    :parsed-elements (conj (:parsed-elements old-state) {attribute (:parsed-elements new-state)})})
@@ -118,6 +127,9 @@
     (looking-at-keywords keyword-constants tokens)
     (consume :keyword {:tokens tokens :parsed-elements parsed-elements})
 
+    (looking-at-identifier-and-symbols ["(" "."] tokens)
+    (parse-subroutine-call {:tokens tokens :parsed-elements parsed-elements})
+
     :else (consume :identifier {:tokens tokens :parsed-elements parsed-elements})))
 
 (defn- parse-expression [{:keys [tokens parsed-elements]}]
@@ -146,21 +158,22 @@
          parse-expression-list
          (combine-under-attribute :expressionList {:parsed-elements parsed-elements}))))
 
-(defn- parse-do-statement [{:keys [tokens parsed-elements]}]
-  (->> {:tokens tokens :parsed-elements []}
-       (consume-matching-value :keyword "do")
+(defn- parse-subroutine-call [{:keys [tokens parsed-elements]}]
+  (->> {:tokens tokens :parsed-elements parsed-elements}
        (consume :identifier)
        (optionally-consume-period-and-identifier)
        (consume-matching-value :symbol "(")
        (optionally-parse-expression-list)
-       (consume-matching-value :symbol ")")
-       (consume-matching-value :symbol ";")
-       (combine-under-attribute :doStatement {:parsed-elements parsed-elements})))
+       (consume-matching-value :symbol ")")))
 
 (defn- parse-subroutine-statements [{:keys [tokens parsed-elements]}]
   (cond
     (looking-at-keywords ["do"] tokens)
-    (parse-do-statement {:tokens tokens :parsed-elements parsed-elements})
+    (->> {:tokens tokens :parsed-elements []}
+         (consume-matching-value :keyword "do")
+         parse-subroutine-call
+         (consume-matching-value :symbol ";")
+         (combine-under-attribute :doStatement {:parsed-elements parsed-elements}))
 
     (looking-at-keywords ["let"] tokens)
     {:tokens tokens :parsed-elements parsed-elements}
@@ -234,7 +247,6 @@
       (raise "class body does not start with subroutine or variable declaration"))))
 
 (defn parse-tokens [tokens]
-  (println "Starting run")
   (let [starting-state {:tokens tokens :parsed-elements []}]
     (cond
       (looking-at-keywords ["class"] tokens)

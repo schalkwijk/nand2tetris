@@ -190,14 +190,14 @@
   (cond
     (looking-at-keywords ["do"] tokens)
     (->> {:tokens tokens :parsed-elements []}
-         (consume-matching-value :keyword "do")
+         (consume :keyword)
          parse-subroutine-call
          (consume-matching-value :symbol ";")
          (combine-under-attribute :doStatement {:parsed-elements parsed-elements}))
 
     (looking-at-keywords ["let"] tokens)
     (->> {:tokens tokens :parsed-elements []}
-         (consume-matching-value :keyword "let")
+         (consume :keyword)
          (consume :identifier)
          (optionally-parse-array-access-expression)
          (consume-matching-value :symbol "=")
@@ -212,7 +212,12 @@
     {:tokens tokens :parsed-elements parsed-elements}
 
     (looking-at-keywords ["return"] tokens)
-    {:tokens tokens :parsed-elements parsed-elements}
+    (as-> {:tokens tokens :parsed-elements []} current-state
+      (consume :keyword current-state)
+      (if (not (looking-at-symbol ";" (:tokens current-state)))
+        (parse-expression-and-combine current-state) current-state)
+      (consume-matching-value :symbol ";" current-state)
+      (combine-under-attribute :returnStatement {:parsed-elements parsed-elements} current-state))
 
     :else {:tokens tokens :parsed-elements parsed-elements}))
 

@@ -35,6 +35,7 @@
 (def equal-t (create-token :symbol "="))
 (def constant (create-token :integerConstant "3"))
 (def var (create-token :keyword "var"))
+(def return (create-token :keyword "return"))
 
 ;; class Main { method Fraction foo() {} }
 (deftest handling-function-declarations
@@ -239,7 +240,26 @@
       [0 :subroutineBody 1 :letStatement 3 :expression 2 :term 3] close-square
       [0 :subroutineBody 1 :letStatement 4] semicolon)))
 
+;; { return; }
+(deftest handling-return-with-no-expression
+  (let [tokens [open-curly return semicolon close-curly]]
+    (are [path value] (= value (get-in (vec (parse-tokens tokens)) path))
+      [0 :subroutineBody 1 :returnStatement 0] return
+      [0 :subroutineBody 1 :returnStatement 1] semicolon)))
+
+;; { return foo + bar; }
+(deftest handling-return-with-expression
+  (let [tokens [open-curly return
+                foo plus bar
+                semicolon close-curly]]
+    (are [path value] (= value (get-in (vec (parse-tokens tokens)) path))
+      [0 :subroutineBody 1 :returnStatement 0] return
+      [0 :subroutineBody 1 :returnStatement 1 :expression 0 :term 0] foo
+      [0 :subroutineBody 1 :returnStatement 1 :expression 1] plus
+      [0 :subroutineBody 1 :returnStatement 1 :expression 2 :term 0] bar
+      [0 :subroutineBody 1 :returnStatement 2] semicolon)))
+
 ;; TODO
 ;; handle let with array on RHS
-;; handle varName '[' expression ']' | '(' expression ')' | unaryOp term
+;; '(' expression ')' | unaryOp term
 ;; test for multiple method declarations in class

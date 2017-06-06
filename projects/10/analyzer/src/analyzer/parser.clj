@@ -142,6 +142,11 @@
       expression-with-term
       (recur (consume :symbol expression-with-term)))))
 
+(defn- parse-expression-and-combine [{:keys [tokens parsed-elements]}]
+  (->> {:tokens tokens :parsed-elements []}
+       parse-expression
+       (combine-under-attribute :expression {:parsed-elements parsed-elements})))
+
 (defn- parse-expression-list [{:keys [tokens parsed-elements]}]
   (if (looking-at-symbol ")" tokens)
     {:tokens tokens :parsed-elements parsed-elements}
@@ -176,7 +181,13 @@
          (combine-under-attribute :doStatement {:parsed-elements parsed-elements}))
 
     (looking-at-keywords ["let"] tokens)
-    {:tokens tokens :parsed-elements parsed-elements}
+    (->> {:tokens tokens :parsed-elements []}
+         (consume-matching-value :keyword "let")
+         (consume :identifier)
+         (consume-matching-value :symbol "=")
+         (parse-expression-and-combine)
+         (consume-matching-value :symbol ";")
+         (combine-under-attribute :letStatement {:parsed-elements parsed-elements}))
 
     (looking-at-keywords ["if"] tokens)
     {:tokens tokens :parsed-elements parsed-elements}

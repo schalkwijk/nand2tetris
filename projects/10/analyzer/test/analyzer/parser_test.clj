@@ -21,12 +21,15 @@
 (def static (create-token :keyword "static"))
 (def field (create-token :keyword "field"))
 (def do (create-token :keyword "do"))
+(def l-token (create-token :keyword "let"))
 (def foo (create-token :identifier "foo"))
 (def bar (create-token :identifier "bar"))
 (def baz (create-token :identifier "baz"))
+(def constant-string (create-token :stringConstant "CONSTANT"))
 (def comma (create-token :symbol ","))
 (def period (create-token :symbol "."))
 (def divide (create-token :symbol "/"))
+(def equal-t (create-token :symbol "="))
 (def constant (create-token :integerConstant "3"))
 (def var (create-token :keyword "var"))
 
@@ -183,9 +186,26 @@
       [0 :subroutineBody 1 :doStatement 5] semicolon
       [0 :subroutineBody 2] close-curly)))
 
+;; { let foo = bar.baz("CONSTANT STRING"); }
+(deftest handling-let-statements
+  (let [tokens [open-curly l-token foo equal-t
+                bar period baz open-paren constant-string close-paren
+                semicolon close-curly]]
+    (are [path value] (= value (get-in (vec (parse-tokens tokens)) path))
+      [0 :subroutineBody 1 :letStatement 0] l-token
+      [0 :subroutineBody 1 :letStatement 1] foo
+      [0 :subroutineBody 1 :letStatement 2] equal-t
+      [0 :subroutineBody 1 :letStatement 3 :expression 0 :term 0] bar
+      [0 :subroutineBody 1 :letStatement 3 :expression 0 :term 1] period
+      [0 :subroutineBody 1 :letStatement 3 :expression 0 :term 2] baz
+      [0 :subroutineBody 1 :letStatement 3 :expression 0 :term 3] open-paren
+      [0 :subroutineBody 1 :letStatement 3 :expression 0 :term 4 :expressionList 0 :expression 0 :term 0] constant-string
+      [0 :subroutineBody 1 :letStatement 3 :expression 0 :term 5] close-paren
+      [0 :subroutineBody 1 :letStatement 4] semicolon
+      [0 :subroutineBody 2] close-curly)))
+
 ;; TODO
-;; handle varName '[' expression ']' | subroutineCall | '(' expression ')' | unaryOp term within term
-;; handle let with method call on RHS
 ;; handle let with array on LHS
 ;; handle let with array on RHS
+;; handle varName '[' expression ']' | subroutineCall | '(' expression ')' | unaryOp term within term
 ;; test for multiple method declarations in class

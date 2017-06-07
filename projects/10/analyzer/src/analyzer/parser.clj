@@ -3,6 +3,7 @@
 (declare parse-subroutine-call)
 (declare parse-array-access-expression)
 (declare parse-subroutine-statements)
+(declare parse-term)
 
 (defn- in?
   "True if collection contains element"
@@ -12,6 +13,7 @@
 (def built-in-type-keywords ["var" "int" "char" "boolean" "void"])
 (def op-symbols ["+" "-" "*" "/" "&" "|" "<" ">" "="])
 (def keyword-constants ["true" "false" "null" "this"])
+(def unary-op ["-" "~"])
 
 (defn- raise [message]
   (throw (Exception. message)))
@@ -118,25 +120,6 @@
          (combine-under-attribute :varDec {:parsed-elements parsed-elements})
          recur)))
 
-(defn- parse-term [{:keys [tokens parsed-elements]}]
-  (cond
-    (looking-at :integerConstant tokens)
-    (consume :integerConstant {:tokens tokens :parsed-elements parsed-elements})
-
-    (looking-at :stringConstant tokens)
-    (consume :stringConstant {:tokens tokens :parsed-elements parsed-elements})
-
-    (looking-at-keywords keyword-constants tokens)
-    (consume :keyword {:tokens tokens :parsed-elements parsed-elements})
-
-    (looking-at-identifier-and-symbols ["(" "."] tokens)
-    (parse-subroutine-call {:tokens tokens :parsed-elements parsed-elements})
-
-    (looking-at-identifier-and-symbols ["["] tokens)
-    (parse-array-access-expression (consume :identifier {:tokens tokens :parsed-elements parsed-elements}))
-
-    :else (consume :identifier {:tokens tokens :parsed-elements parsed-elements})))
-
 (defn- parse-expression [{:keys [tokens parsed-elements]}]
   (let [expression-with-term
         (->> {:tokens tokens :parsed-elements []}
@@ -151,6 +134,36 @@
   (->> {:tokens tokens :parsed-elements []}
        parse-expression
        (combine-under-attribute :expression {:parsed-elements parsed-elements})))
+
+(defn- parse-term [{:keys [tokens parsed-elements]}]
+  (cond
+    (looking-at :integerConstant tokens)
+    (consume :integerConstant {:tokens tokens :parsed-elements parsed-elements})
+
+    (looking-at :stringConstant tokens)
+    (consume :stringConstant {:tokens tokens :parsed-elements parsed-elements})
+
+    (looking-at-keywords keyword-constants tokens)
+    (consume :keyword {:tokens tokens :parsed-elements parsed-elements})
+
+    (looking-at-symbol "(" tokens)
+    (->> {:tokens tokens :parsed-elements parsed-elements}
+         (consume :symbol)
+         parse-expression-and-combine
+         (consume-matching-value :symbol ")"))
+
+    (looking-at-symbols unary-op tokens)
+    (let [consumed-op (consume :symbol {:tokens tokens :parsed-elements parsed-elements})
+          additional-term (parse-term {:tokens (:tokens consumed-op) :parsed-elements []})]
+      (combine-under-attribute :term {:parsed-elements (:parsed-elements consumed-op)} additional-term))
+
+    (looking-at-identifier-and-symbols ["(" "."] tokens)
+    (parse-subroutine-call {:tokens tokens :parsed-elements parsed-elements})
+
+    (looking-at-identifier-and-symbols ["["] tokens)
+    (parse-array-access-expression (consume :identifier {:tokens tokens :parsed-elements parsed-elements}))
+
+    :else (consume :identifier {:tokens tokens :parsed-elements parsed-elements})))
 
 (defn- parse-expression-list [{:keys [tokens parsed-elements]}]
   (if (looking-at-symbol ")" tokens)

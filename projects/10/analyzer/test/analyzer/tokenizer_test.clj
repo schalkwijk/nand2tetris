@@ -74,7 +74,8 @@
 
 (deftest handling-negative-integer-constants
   (are [value location] (= value (nth (tokenize-instruction "let i = -100;") location))
-    {:type :integerConstant :value "-100"} 3))
+    {:type :symbol :value "-"} 3
+    {:type :integerConstant :value "100"} 4))
 
 (deftest handling-string-constants
   (are [value location] (= value (nth (tokenize-instruction "do Output.printString(\"THE AVERAGE IS: \");") location))

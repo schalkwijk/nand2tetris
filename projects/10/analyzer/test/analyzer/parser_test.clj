@@ -38,6 +38,7 @@
 (def plus (create-token :symbol "+"))
 (def equal-t (create-token :symbol "="))
 (def less-than (create-token :symbol "<"))
+(def minus-t (create-token :symbol "-"))
 (def constant (create-token :integerConstant "3"))
 (def var (create-token :keyword "var"))
 
@@ -336,8 +337,25 @@
       [0 :subroutineBody 1 :statements 0 :letStatement 0] l-token
       [0 :subroutineBody 1 :statements 1 :letStatement 0] l-token)))
 
+;; { let foo = baz / (-3); }
+(deftest handling-unary-ops
+  (let [tokens [open-curly
+                l-token foo equal-t baz divide
+                open-paren minus-t constant close-paren semicolon
+                close-curly]]
+    (are [path value] (= value (get-in (parse-tokens tokens) path))
+      [0 :subroutineBody 1 :statements 0 :letStatement 0] l-token
+      [0 :subroutineBody 1 :statements 0 :letStatement 1] foo
+      [0 :subroutineBody 1 :statements 0 :letStatement 2] equal-t
+      [0 :subroutineBody 1 :statements 0 :letStatement 3 :expression 0 :term 0] baz
+      [0 :subroutineBody 1 :statements 0 :letStatement 3 :expression 1] divide
+      [0 :subroutineBody 1 :statements 0 :letStatement 3 :expression 2 :term 0] open-paren
+      [0 :subroutineBody 1 :statements 0 :letStatement 3 :expression 2 :term 1 :expression 0 :term 0] minus-t
+      [0 :subroutineBody 1 :statements 0 :letStatement 3 :expression 2 :term 1 :expression 0 :term 1 :term 0] constant
+      [0 :subroutineBody 1 :statements 0 :letStatement 3 :expression 2 :term 2] close-paren
+      [0 :subroutineBody 1 :statements 0 :letStatement 4] semicolon)))
+
 ;; TODO
 ;; '(' expression ')' | unaryOp term
-;; if statement
 ;; test multiple statements inside a method
 ;; test for multiple method declarations in class

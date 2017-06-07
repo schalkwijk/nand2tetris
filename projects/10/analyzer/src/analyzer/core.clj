@@ -2,6 +2,7 @@
   (:gen-class)
   (:require [analyzer.formatter :refer [output-tokens]]
             [analyzer.tokenizer :refer :all]
+            [analyzer.parser :refer :all]
             [clojure.java.io :as io]
             [clojure.string :as str]))
 

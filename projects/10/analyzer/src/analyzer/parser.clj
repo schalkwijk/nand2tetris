@@ -199,7 +199,8 @@
          (consume :keyword)
          parse-subroutine-call
          (consume-matching-value :symbol ";")
-         (combine-under-attribute :doStatement {:parsed-elements parsed-elements}))
+         (combine-under-attribute :doStatement {:parsed-elements parsed-elements})
+         (recur))
 
     (looking-at-keywords ["let"] tokens)
     (->> {:tokens tokens :parsed-elements []}
@@ -209,7 +210,8 @@
          (consume-matching-value :symbol "=")
          (parse-expression-and-combine)
          (consume-matching-value :symbol ";")
-         (combine-under-attribute :letStatement {:parsed-elements parsed-elements}))
+         (combine-under-attribute :letStatement {:parsed-elements parsed-elements})
+         (recur))
 
     (looking-at-keywords ["if"] tokens)
     {:tokens tokens :parsed-elements parsed-elements}
@@ -223,7 +225,8 @@
          (consume-matching-value :symbol "{")
          (parse-statement-and-combine)
          (consume-matching-value :symbol "}")
-         (combine-under-attribute :whileStatement {:parsed-elements parsed-elements}))
+         (combine-under-attribute :whileStatement {:parsed-elements parsed-elements})
+         (recur))
 
     (looking-at-keywords ["return"] tokens)
     (as-> {:tokens tokens :parsed-elements []} current-state
@@ -231,7 +234,8 @@
       (if (not (looking-at-symbol ";" (:tokens current-state)))
         (parse-expression-and-combine current-state) current-state)
       (consume-matching-value :symbol ";" current-state)
-      (combine-under-attribute :returnStatement {:parsed-elements parsed-elements} current-state))
+      (combine-under-attribute :returnStatement {:parsed-elements parsed-elements} current-state)
+      (recur current-state))
 
     :else {:tokens tokens :parsed-elements parsed-elements}))
 

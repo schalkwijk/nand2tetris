@@ -282,6 +282,16 @@
       [0 :subroutineBody 1 :whileStatement 5 :statements 0 :letStatement 4] semicolon
       [0 :subroutineBody 1 :whileStatement 6] close-curly)))
 
+;; { let foo = 3; let bar = baz; }
+(deftest handling-multiple-statements-within-method-body
+  (let [tokens [open-curly
+                l-token foo equal-t constant semicolon
+                l-token bar equal-t baz semicolon
+                close-curly]]
+    (are [path value] (= value (get-in (vec (parse-tokens tokens)) path))
+      [0 :subroutineBody 1 :letStatement 0] l-token
+      [0 :subroutineBody 2 :letStatement 0] l-token)))
+
 ;; TODO
 ;; '(' expression ')' | unaryOp term
 ;; if statement

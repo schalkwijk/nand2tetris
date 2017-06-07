@@ -2,6 +2,7 @@
 
 (declare parse-subroutine-call)
 (declare parse-array-access-expression)
+(declare parse-subroutine-statements)
 
 (defn- in?
   "True if collection contains element"
@@ -186,6 +187,11 @@
     {:tokens tokens :parsed-elements parsed-elements}
     (parse-array-access-expression {:tokens tokens :parsed-elements parsed-elements})))
 
+(defn- parse-statement-and-combine [{:keys [tokens parsed-elements]}]
+  (->> {:tokens tokens :parsed-elements []}
+        parse-subroutine-statements
+       (combine-under-attribute :statements {:parsed-elements parsed-elements})))
+
 (defn- parse-subroutine-statements [{:keys [tokens parsed-elements]}]
   (cond
     (looking-at-keywords ["do"] tokens)
@@ -209,7 +215,15 @@
     {:tokens tokens :parsed-elements parsed-elements}
 
     (looking-at-keywords ["while"] tokens)
-    {:tokens tokens :parsed-elements parsed-elements}
+    (->> {:tokens tokens :parsed-elements []}
+         (consume :keyword)
+         (consume-matching-value :symbol "(")
+         (parse-expression-and-combine)
+         (consume-matching-value :symbol ")")
+         (consume-matching-value :symbol "{")
+         (parse-statement-and-combine)
+         (consume-matching-value :symbol "}")
+         (combine-under-attribute :whileStatement {:parsed-elements parsed-elements}))
 
     (looking-at-keywords ["return"] tokens)
     (as-> {:tokens tokens :parsed-elements []} current-state

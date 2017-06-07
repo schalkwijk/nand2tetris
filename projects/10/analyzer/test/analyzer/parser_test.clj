@@ -24,6 +24,8 @@
 (def field (create-token :keyword "field"))
 (def do (create-token :keyword "do"))
 (def l-token (create-token :keyword "let"))
+(def while (create-token :keyword "while"))
+(def return (create-token :keyword "return"))
 (def foo (create-token :identifier "foo"))
 (def bar (create-token :identifier "bar"))
 (def baz (create-token :identifier "baz"))
@@ -33,9 +35,9 @@
 (def divide (create-token :symbol "/"))
 (def plus (create-token :symbol "+"))
 (def equal-t (create-token :symbol "="))
+(def less-than (create-token :symbol "<"))
 (def constant (create-token :integerConstant "3"))
 (def var (create-token :keyword "var"))
-(def return (create-token :keyword "return"))
 
 ;; class Main { method Fraction foo() {} }
 (deftest handling-function-declarations
@@ -259,7 +261,29 @@
       [0 :subroutineBody 1 :returnStatement 1 :expression 2 :term 0] bar
       [0 :subroutineBody 1 :returnStatement 2] semicolon)))
 
+;; { while(foo < bar) { let baz = 3; } }
+(deftest handling-return-with-expression
+  (let [tokens [open-curly while open-paren
+                foo less-than bar close-paren
+                open-curly l-token baz equal-t constant semicolon close-curly
+                close-curly]]
+    (are [path value] (= value (get-in (vec (parse-tokens tokens)) path))
+      [0 :subroutineBody 1 :whileStatement 0] while
+      [0 :subroutineBody 1 :whileStatement 1] open-paren
+      [0 :subroutineBody 1 :whileStatement 2 :expression 0 :term 0] foo
+      [0 :subroutineBody 1 :whileStatement 2 :expression 1] less-than
+      [0 :subroutineBody 1 :whileStatement 2 :expression 2 :term 0] bar
+      [0 :subroutineBody 1 :whileStatement 3] close-paren
+      [0 :subroutineBody 1 :whileStatement 4] open-curly
+      [0 :subroutineBody 1 :whileStatement 5 :statements 0 :letStatement 0] l-token
+      [0 :subroutineBody 1 :whileStatement 5 :statements 0 :letStatement 1] baz
+      [0 :subroutineBody 1 :whileStatement 5 :statements 0 :letStatement 2] equal-t
+      [0 :subroutineBody 1 :whileStatement 5 :statements 0 :letStatement 3 :expression 0 :term 0] constant
+      [0 :subroutineBody 1 :whileStatement 5 :statements 0 :letStatement 4] semicolon
+      [0 :subroutineBody 1 :whileStatement 6] close-curly)))
+
 ;; TODO
-;; handle let with array on RHS
 ;; '(' expression ')' | unaryOp term
+;; if statement
+;; test multiple statements inside a method
 ;; test for multiple method declarations in class

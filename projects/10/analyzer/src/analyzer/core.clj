@@ -7,10 +7,9 @@
             [clojure.string :as str]))
 
 (defn- tokenize-parse-and-output-single-file [filename]
-  (let [xml-filename (str/replace (.getName (io/file filename)) ".jack" "T.xml")
-        output-filename (str (System/getProperty "user.dir") "/" xml-filename)]
+  (let [xml-filename (str/replace filename ".jack" ".xml")]
     (with-open [rdr (io/reader filename)]
-      (with-open [wrtr (io/writer output-filename)]
+      (with-open [wrtr (io/writer xml-filename)]
         (.write wrtr (with-out-str (output-parse-tree (parse-tokens (tokenize-instructions (line-seq rdr))))))))))
 
 (defn- extract-jack-files-from-directory [directory]

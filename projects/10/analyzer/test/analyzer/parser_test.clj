@@ -24,7 +24,7 @@
 (def field (create-token :keyword "field"))
 (def do (create-token :keyword "do"))
 (def l-token (create-token :keyword "let"))
-(def while (create-token :keyword "while"))
+(def while-t (create-token :keyword "while"))
 (def return (create-token :keyword "return"))
 (def foo (create-token :identifier "foo"))
 (def bar (create-token :identifier "bar"))
@@ -43,7 +43,7 @@
 (deftest handling-function-declarations
   (let [tokens [class-t class-name open-curly method fraction method-name
                 open-paren close-paren open-curly close-curly close-curly]]
-    (are [path value] (= value (get-in (vec (parse-tokens tokens)) path))
+    (are [path value] (= value (get-in (parse-tokens tokens) path))
       [0 :class 0] class-t
       [0 :class 1] class-name
       [0 :class 2] open-curly
@@ -51,16 +51,18 @@
       [0 :class 3 :subroutineDec 1] fraction
       [0 :class 3 :subroutineDec 2] method-name
       [0 :class 3 :subroutineDec 3] open-paren
-      [0 :class 3 :subroutineDec 4] close-paren
-      [0 :class 3 :subroutineDec 5 :subroutineBody 0] open-curly
-      [0 :class 3 :subroutineDec 5 :subroutineBody 1] close-curly
+      [0 :class 3 :subroutineDec 4 :parameterList] []
+      [0 :class 3 :subroutineDec 5] close-paren
+      [0 :class 3 :subroutineDec 6 :subroutineBody 0] open-curly
+      [0 :class 3 :subroutineDec 6 :subroutineBody 1 :statements] []
+      [0 :class 3 :subroutineDec 6 :subroutineBody 2] close-curly
       [0 :class 4] close-curly)))
 
 ;; class Main { method void foo() {} }
 (deftest handling-void-function-returns
   (let [tokens [class-t class-name open-curly method void method-name
                 open-paren close-paren open-curly close-curly close-curly]]
-    (are [path value] (= value (get-in (vec (parse-tokens tokens)) path))
+    (are [path value] (= value (get-in (parse-tokens tokens) path))
       [0 :class 3 :subroutineDec 0] method
       [0 :class 3 :subroutineDec 1] void
       [0 :class 3 :subroutineDec 2] method-name)))
@@ -70,7 +72,7 @@
   (let [tokens [class-t class-name open-curly
                 method int-t method-name open-paren close-paren open-curly close-curly
                 close-curly]]
-    (are [path value] (= value (get-in (vec (parse-tokens tokens)) path))
+    (are [path value] (= value (get-in (parse-tokens tokens) path))
       [0 :class 3 :subroutineDec 0] method
       [0 :class 3 :subroutineDec 1] int-t
       [0 :class 3 :subroutineDec 2] method-name)))
@@ -81,7 +83,7 @@
                 field fraction baz semicolon
                 static int-t foo comma bar semicolon
                 close-curly]]
-    (are [path value] (= value (get-in (vec (parse-tokens tokens)) path))
+    (are [path value] (= value (get-in (parse-tokens tokens) path))
       [0 :class 3 :classVarDec 0] field
       [0 :class 3 :classVarDec 1] fraction
       [0 :class 3 :classVarDec 2] baz
@@ -100,7 +102,7 @@
                 int-t bar comma fraction baz
                 close-paren open-curly close-curly
                 close-curly]]
-    (are [path value] (= value (get-in (vec (parse-tokens tokens)) path))
+    (are [path value] (= value (get-in (parse-tokens tokens) path))
       [0 :class 3 :subroutineDec 4 :parameterList 0] int-t
       [0 :class 3 :subroutineDec 4 :parameterList 1] bar
       [0 :class 3 :subroutineDec 4 :parameterList 2] comma
@@ -113,44 +115,46 @@
                 var int-t bar comma baz semicolon
                 var fraction foo semicolon
                 close-curly]]
-    (are [path value] (= value (get-in (vec (parse-tokens tokens)) path))
-      [0 :subroutineDec 5 :subroutineBody 0] open-curly
-      [0 :subroutineDec 5 :subroutineBody 1 :varDec 0] var
-      [0 :subroutineDec 5 :subroutineBody 1 :varDec 1] int-t
-      [0 :subroutineDec 5 :subroutineBody 1 :varDec 2] bar
-      [0 :subroutineDec 5 :subroutineBody 1 :varDec 3] comma
-      [0 :subroutineDec 5 :subroutineBody 1 :varDec 4] baz
-      [0 :subroutineDec 5 :subroutineBody 1 :varDec 5] semicolon
-      [0 :subroutineDec 5 :subroutineBody 2 :varDec 0] var
-      [0 :subroutineDec 5 :subroutineBody 2 :varDec 1] fraction
-      [0 :subroutineDec 5 :subroutineBody 2 :varDec 2] foo
-      [0 :subroutineDec 5 :subroutineBody 2 :varDec 3] semicolon
-      [0 :subroutineDec 5 :subroutineBody 3] close-curly)))
+    (are [path value] (= value (get-in (parse-tokens tokens) path))
+      [0 :subroutineDec 6 :subroutineBody 0] open-curly
+      [0 :subroutineDec 6 :subroutineBody 1 :varDec 0] var
+      [0 :subroutineDec 6 :subroutineBody 1 :varDec 1] int-t
+      [0 :subroutineDec 6 :subroutineBody 1 :varDec 2] bar
+      [0 :subroutineDec 6 :subroutineBody 1 :varDec 3] comma
+      [0 :subroutineDec 6 :subroutineBody 1 :varDec 4] baz
+      [0 :subroutineDec 6 :subroutineBody 1 :varDec 5] semicolon
+      [0 :subroutineDec 6 :subroutineBody 2 :varDec 0] var
+      [0 :subroutineDec 6 :subroutineBody 2 :varDec 1] fraction
+      [0 :subroutineDec 6 :subroutineBody 2 :varDec 2] foo
+      [0 :subroutineDec 6 :subroutineBody 2 :varDec 3] semicolon
+      [0 :subroutineDec 6 :subroutineBody 3 :statements] []
+      [0 :subroutineDec 6 :subroutineBody 4] close-curly)))
 
 ;; { do bar(); }
 (deftest handling-simple-function-calls
   (let [tokens [open-curly do bar open-paren close-paren semicolon close-curly]]
-    (are [path value] (= value (get-in (vec (parse-tokens tokens)) path))
-      [0 :subroutineBody 1 :doStatement 0] do
-      [0 :subroutineBody 1 :doStatement 1] bar
-      [0 :subroutineBody 1 :doStatement 2] open-paren
-      [0 :subroutineBody 1 :doStatement 3] close-paren
-      [0 :subroutineBody 1 :doStatement 4] semicolon)))
+    (are [path value] (= value (get-in (parse-tokens tokens) path))
+      [0 :subroutineBody 1 :statements 0 :doStatement 0] do
+      [0 :subroutineBody 1 :statements 0 :doStatement 1] bar
+      [0 :subroutineBody 1 :statements 0 :doStatement 2] open-paren
+      [0 :subroutineBody 1 :statements 0 :doStatement 3 :expressionList] []
+      [0 :subroutineBody 1 :statements 0 :doStatement 4] close-paren
+      [0 :subroutineBody 1 :statements 0 :doStatement 5] semicolon)))
 
 ;; { do foo.bar(); }
 (deftest handling-function-calls-on-objects
   (let [tokens [open-curly
                 do foo period bar open-paren close-paren semicolon
                 close-curly]]
-    (are [path value] (= value (get-in (vec (parse-tokens tokens)) path))
-      [0 :subroutineBody 1 :doStatement 0] do
-      [0 :subroutineBody 1 :doStatement 1] foo
-      [0 :subroutineBody 1 :doStatement 2] period
-      [0 :subroutineBody 1 :doStatement 3] bar
-      [0 :subroutineBody 1 :doStatement 4] open-paren
-      [0 :subroutineBody 1 :doStatement 5] close-paren
-      [0 :subroutineBody 1 :doStatement 6] semicolon
-      )))
+    (are [path value] (= value (get-in (parse-tokens tokens) path))
+      [0 :subroutineBody 1 :statements 0 :doStatement 0] do
+      [0 :subroutineBody 1 :statements 0 :doStatement 1] foo
+      [0 :subroutineBody 1 :statements 0 :doStatement 2] period
+      [0 :subroutineBody 1 :statements 0 :doStatement 3] bar
+      [0 :subroutineBody 1 :statements 0 :doStatement 4] open-paren
+      [0 :subroutineBody 1 :statements 0 :doStatement 5 :expressionList] []
+      [0 :subroutineBody 1 :statements 0 :doStatement 6] close-paren
+      [0 :subroutineBody 1 :statements 0 :doStatement 7] semicolon)))
 
 ;; { do foo.bar(baz / 3); }
 (deftest handling-function-calls-with-simple-expressions
@@ -159,17 +163,17 @@
                 baz divide constant
                 close-paren semicolon
                 close-curly]]
-    (are [path value] (= value (get-in (vec (parse-tokens tokens)) path))
-      [0 :subroutineBody 1 :doStatement 0] do
-      [0 :subroutineBody 1 :doStatement 1] foo
-      [0 :subroutineBody 1 :doStatement 2] period
-      [0 :subroutineBody 1 :doStatement 3] bar
-      [0 :subroutineBody 1 :doStatement 4] open-paren
-      [0 :subroutineBody 1 :doStatement 5 :expressionList 0 :expression 0 :term 0] baz
-      [0 :subroutineBody 1 :doStatement 5 :expressionList 0 :expression 1] divide
-      [0 :subroutineBody 1 :doStatement 5 :expressionList 0 :expression 2 :term 0] constant
-      [0 :subroutineBody 1 :doStatement 6] close-paren
-      [0 :subroutineBody 1 :doStatement 7] semicolon)))
+    (are [path value] (= value (get-in (parse-tokens tokens) path))
+      [0 :subroutineBody 1 :statements 0 :doStatement 0] do
+      [0 :subroutineBody 1 :statements 0 :doStatement 1] foo
+      [0 :subroutineBody 1 :statements 0 :doStatement 2] period
+      [0 :subroutineBody 1 :statements 0 :doStatement 3] bar
+      [0 :subroutineBody 1 :statements 0 :doStatement 4] open-paren
+      [0 :subroutineBody 1 :statements 0 :doStatement 5 :expressionList 0 :expression 0 :term 0] baz
+      [0 :subroutineBody 1 :statements 0 :doStatement 5 :expressionList 0 :expression 1] divide
+      [0 :subroutineBody 1 :statements 0 :doStatement 5 :expressionList 0 :expression 2 :term 0] constant
+      [0 :subroutineBody 1 :statements 0 :doStatement 6] close-paren
+      [0 :subroutineBody 1 :statements 0 :doStatement 7] semicolon)))
 
 ;; { do foo(bar(baz / 3)); }
 (deftest handling-function-calls-within-function-calls
@@ -178,18 +182,18 @@
                 baz open-paren baz divide constant close-paren
                 close-paren semicolon
                 close-curly]]
-    (are [path value] (= value (get-in (vec (parse-tokens tokens)) path))
-      [0 :subroutineBody 1 :doStatement 0] do
-      [0 :subroutineBody 1 :doStatement 1] foo
-      [0 :subroutineBody 1 :doStatement 2] open-paren
-      [0 :subroutineBody 1 :doStatement 3 :expressionList 0 :expression 0 :term 0] baz
-      [0 :subroutineBody 1 :doStatement 3 :expressionList 0 :expression 0 :term 1] open-paren
-      [0 :subroutineBody 1 :doStatement 3 :expressionList 0 :expression 0 :term 2 :expressionList 0 :expression 0 :term 0] baz
-      [0 :subroutineBody 1 :doStatement 3 :expressionList 0 :expression 0 :term 2 :expressionList 0 :expression 1] divide
-      [0 :subroutineBody 1 :doStatement 3 :expressionList 0 :expression 0 :term 2 :expressionList 0 :expression 2 :term 0] constant
-      [0 :subroutineBody 1 :doStatement 3 :expressionList 0 :expression 0 :term 3] close-paren
-      [0 :subroutineBody 1 :doStatement 4] close-paren
-      [0 :subroutineBody 1 :doStatement 5] semicolon
+    (are [path value] (= value (get-in (parse-tokens tokens) path))
+      [0 :subroutineBody 1 :statements 0 :doStatement 0] do
+      [0 :subroutineBody 1 :statements 0 :doStatement 1] foo
+      [0 :subroutineBody 1 :statements 0 :doStatement 2] open-paren
+      [0 :subroutineBody 1 :statements 0 :doStatement 3 :expressionList 0 :expression 0 :term 0] baz
+      [0 :subroutineBody 1 :statements 0 :doStatement 3 :expressionList 0 :expression 0 :term 1] open-paren
+      [0 :subroutineBody 1 :statements 0 :doStatement 3 :expressionList 0 :expression 0 :term 2 :expressionList 0 :expression 0 :term 0] baz
+      [0 :subroutineBody 1 :statements 0 :doStatement 3 :expressionList 0 :expression 0 :term 2 :expressionList 0 :expression 1] divide
+      [0 :subroutineBody 1 :statements 0 :doStatement 3 :expressionList 0 :expression 0 :term 2 :expressionList 0 :expression 2 :term 0] constant
+      [0 :subroutineBody 1 :statements 0 :doStatement 3 :expressionList 0 :expression 0 :term 3] close-paren
+      [0 :subroutineBody 1 :statements 0 :doStatement 4] close-paren
+      [0 :subroutineBody 1 :statements 0 :doStatement 5] semicolon
       [0 :subroutineBody 2] close-curly)))
 
 ;; { let foo = bar.baz("CONSTANT STRING"); }
@@ -197,17 +201,17 @@
   (let [tokens [open-curly l-token foo equal-t
                 bar period baz open-paren constant-string close-paren
                 semicolon close-curly]]
-    (are [path value] (= value (get-in (vec (parse-tokens tokens)) path))
-      [0 :subroutineBody 1 :letStatement 0] l-token
-      [0 :subroutineBody 1 :letStatement 1] foo
-      [0 :subroutineBody 1 :letStatement 2] equal-t
-      [0 :subroutineBody 1 :letStatement 3 :expression 0 :term 0] bar
-      [0 :subroutineBody 1 :letStatement 3 :expression 0 :term 1] period
-      [0 :subroutineBody 1 :letStatement 3 :expression 0 :term 2] baz
-      [0 :subroutineBody 1 :letStatement 3 :expression 0 :term 3] open-paren
-      [0 :subroutineBody 1 :letStatement 3 :expression 0 :term 4 :expressionList 0 :expression 0 :term 0] constant-string
-      [0 :subroutineBody 1 :letStatement 3 :expression 0 :term 5] close-paren
-      [0 :subroutineBody 1 :letStatement 4] semicolon
+    (are [path value] (= value (get-in (parse-tokens tokens) path))
+      [0 :subroutineBody 1 :statements 0 :letStatement 0] l-token
+      [0 :subroutineBody 1 :statements 0 :letStatement 1] foo
+      [0 :subroutineBody 1 :statements 0 :letStatement 2] equal-t
+      [0 :subroutineBody 1 :statements 0 :letStatement 3 :expression 0 :term 0] bar
+      [0 :subroutineBody 1 :statements 0 :letStatement 3 :expression 0 :term 1] period
+      [0 :subroutineBody 1 :statements 0 :letStatement 3 :expression 0 :term 2] baz
+      [0 :subroutineBody 1 :statements 0 :letStatement 3 :expression 0 :term 3] open-paren
+      [0 :subroutineBody 1 :statements 0 :letStatement 3 :expression 0 :term 4 :expressionList 0 :expression 0 :term 0] constant-string
+      [0 :subroutineBody 1 :statements 0 :letStatement 3 :expression 0 :term 5] close-paren
+      [0 :subroutineBody 1 :statements 0 :letStatement 4] semicolon
       [0 :subroutineBody 2] close-curly)))
 
 ;; { let foo[bar / 3] = baz; }
@@ -215,7 +219,7 @@
   (let [tokens [open-curly l-token foo open-square
                 bar divide constant close-square equal-t baz
                 semicolon close-curly]]
-    (are [path value] (= value (get-in (vec (parse-tokens tokens)) path))
+    (are [path value] (= value (get-in (parse-tokens tokens) path))
       [0 :subroutineBody 1 :letStatement 0] l-token
       [0 :subroutineBody 1 :letStatement 1] foo
       [0 :subroutineBody 1 :letStatement 2] open-square
@@ -230,57 +234,57 @@
   (let [tokens [open-curly l-token foo equal-t
                 constant plus bar open-square baz close-square
                 semicolon close-curly]]
-    (are [path value] (= value (get-in (vec (parse-tokens tokens)) path))
-      [0 :subroutineBody 1 :letStatement 0] l-token
-      [0 :subroutineBody 1 :letStatement 1] foo
-      [0 :subroutineBody 1 :letStatement 2] equal-t
-      [0 :subroutineBody 1 :letStatement 3 :expression 0 :term 0] constant
-      [0 :subroutineBody 1 :letStatement 3 :expression 1] plus
-      [0 :subroutineBody 1 :letStatement 3 :expression 2 :term 0] bar
-      [0 :subroutineBody 1 :letStatement 3 :expression 2 :term 1] open-square
-      [0 :subroutineBody 1 :letStatement 3 :expression 2 :term 2 :expression 0 :term 0] baz
-      [0 :subroutineBody 1 :letStatement 3 :expression 2 :term 3] close-square
-      [0 :subroutineBody 1 :letStatement 4] semicolon)))
+    (are [path value] (= value (get-in (parse-tokens tokens) path))
+      [0 :subroutineBody 1 :statements 0 :letStatement 0] l-token
+      [0 :subroutineBody 1 :statements 0 :letStatement 1] foo
+      [0 :subroutineBody 1 :statements 0 :letStatement 2] equal-t
+      [0 :subroutineBody 1 :statements 0 :letStatement 3 :expression 0 :term 0] constant
+      [0 :subroutineBody 1 :statements 0 :letStatement 3 :expression 1] plus
+      [0 :subroutineBody 1 :statements 0 :letStatement 3 :expression 2 :term 0] bar
+      [0 :subroutineBody 1 :statements 0 :letStatement 3 :expression 2 :term 1] open-square
+      [0 :subroutineBody 1 :statements 0 :letStatement 3 :expression 2 :term 2 :expression 0 :term 0] baz
+      [0 :subroutineBody 1 :statements 0 :letStatement 3 :expression 2 :term 3] close-square
+      [0 :subroutineBody 1 :statements 0 :letStatement 4] semicolon)))
 
 ;; { return; }
 (deftest handling-return-with-no-expression
   (let [tokens [open-curly return semicolon close-curly]]
-    (are [path value] (= value (get-in (vec (parse-tokens tokens)) path))
-      [0 :subroutineBody 1 :returnStatement 0] return
-      [0 :subroutineBody 1 :returnStatement 1] semicolon)))
+    (are [path value] (= value (get-in (parse-tokens tokens) path))
+      [0 :subroutineBody 1 :statements 0 :returnStatement 0] return
+      [0 :subroutineBody 1 :statements 0 :returnStatement 1] semicolon)))
 
 ;; { return foo + bar; }
 (deftest handling-return-with-expression
   (let [tokens [open-curly return
                 foo plus bar
                 semicolon close-curly]]
-    (are [path value] (= value (get-in (vec (parse-tokens tokens)) path))
-      [0 :subroutineBody 1 :returnStatement 0] return
-      [0 :subroutineBody 1 :returnStatement 1 :expression 0 :term 0] foo
-      [0 :subroutineBody 1 :returnStatement 1 :expression 1] plus
-      [0 :subroutineBody 1 :returnStatement 1 :expression 2 :term 0] bar
-      [0 :subroutineBody 1 :returnStatement 2] semicolon)))
+    (are [path value] (= value (get-in (parse-tokens tokens) path))
+      [0 :subroutineBody 1 :statements 0 :returnStatement 0] return
+      [0 :subroutineBody 1 :statements 0 :returnStatement 1 :expression 0 :term 0] foo
+      [0 :subroutineBody 1 :statements 0 :returnStatement 1 :expression 1] plus
+      [0 :subroutineBody 1 :statements 0 :returnStatement 1 :expression 2 :term 0] bar
+      [0 :subroutineBody 1 :statements 0 :returnStatement 2] semicolon)))
 
 ;; { while(foo < bar) { let baz = 3; } }
 (deftest handling-return-with-expression
-  (let [tokens [open-curly while open-paren
+  (let [tokens [open-curly while-t open-paren
                 foo less-than bar close-paren
                 open-curly l-token baz equal-t constant semicolon close-curly
                 close-curly]]
-    (are [path value] (= value (get-in (vec (parse-tokens tokens)) path))
-      [0 :subroutineBody 1 :whileStatement 0] while
-      [0 :subroutineBody 1 :whileStatement 1] open-paren
-      [0 :subroutineBody 1 :whileStatement 2 :expression 0 :term 0] foo
-      [0 :subroutineBody 1 :whileStatement 2 :expression 1] less-than
-      [0 :subroutineBody 1 :whileStatement 2 :expression 2 :term 0] bar
-      [0 :subroutineBody 1 :whileStatement 3] close-paren
-      [0 :subroutineBody 1 :whileStatement 4] open-curly
-      [0 :subroutineBody 1 :whileStatement 5 :statements 0 :letStatement 0] l-token
-      [0 :subroutineBody 1 :whileStatement 5 :statements 0 :letStatement 1] baz
-      [0 :subroutineBody 1 :whileStatement 5 :statements 0 :letStatement 2] equal-t
-      [0 :subroutineBody 1 :whileStatement 5 :statements 0 :letStatement 3 :expression 0 :term 0] constant
-      [0 :subroutineBody 1 :whileStatement 5 :statements 0 :letStatement 4] semicolon
-      [0 :subroutineBody 1 :whileStatement 6] close-curly)))
+    (are [path value] (= value (get-in (parse-tokens tokens) path))
+      [0 :subroutineBody 1 :statements 0 :whileStatement 0] while-t
+      [0 :subroutineBody 1 :statements 0 :whileStatement 1] open-paren
+      [0 :subroutineBody 1 :statements 0 :whileStatement 2 :expression 0 :term 0] foo
+      [0 :subroutineBody 1 :statements 0 :whileStatement 2 :expression 1] less-than
+      [0 :subroutineBody 1 :statements 0 :whileStatement 2 :expression 2 :term 0] bar
+      [0 :subroutineBody 1 :statements 0 :whileStatement 3] close-paren
+      [0 :subroutineBody 1 :statements 0 :whileStatement 4] open-curly
+      [0 :subroutineBody 1 :statements 0 :whileStatement 5 :statements 0 :letStatement 0] l-token
+      [0 :subroutineBody 1 :statements 0 :whileStatement 5 :statements 0 :letStatement 1] baz
+      [0 :subroutineBody 1 :statements 0 :whileStatement 5 :statements 0 :letStatement 2] equal-t
+      [0 :subroutineBody 1 :statements 0 :whileStatement 5 :statements 0 :letStatement 3 :expression 0 :term 0] constant
+      [0 :subroutineBody 1 :statements 0 :whileStatement 5 :statements 0 :letStatement 4] semicolon
+      [0 :subroutineBody 1 :statements 0 :whileStatement 6] close-curly)))
 
 ;; { let foo = 3; let bar = baz; }
 (deftest handling-multiple-statements-within-method-body
@@ -288,9 +292,9 @@
                 l-token foo equal-t constant semicolon
                 l-token bar equal-t baz semicolon
                 close-curly]]
-    (are [path value] (= value (get-in (vec (parse-tokens tokens)) path))
-      [0 :subroutineBody 1 :letStatement 0] l-token
-      [0 :subroutineBody 2 :letStatement 0] l-token)))
+    (are [path value] (= value (get-in (parse-tokens tokens) path))
+      [0 :subroutineBody 1 :statements 0 :letStatement 0] l-token
+      [0 :subroutineBody 1 :statements 1 :letStatement 0] l-token)))
 
 ;; TODO
 ;; '(' expression ')' | unaryOp term

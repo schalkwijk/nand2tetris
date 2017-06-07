@@ -162,11 +162,9 @@
          recur)))
 
 (defn- optionally-parse-expression-list [{:keys [tokens parsed-elements]}]
-  (if (looking-at-symbol ")" tokens)
-    {:tokens tokens :parsed-elements parsed-elements}
-    (->> {:tokens tokens :parsed-elements []}
-         parse-expression-list
-         (combine-under-attribute :expressionList {:parsed-elements parsed-elements}))))
+  (->> {:tokens tokens :parsed-elements []}
+       parse-expression-list
+       (combine-under-attribute :expressionList {:parsed-elements parsed-elements})))
 
 (defn- parse-subroutine-call [{:keys [tokens parsed-elements]}]
   (->> {:tokens tokens :parsed-elements parsed-elements}
@@ -187,7 +185,7 @@
     {:tokens tokens :parsed-elements parsed-elements}
     (parse-array-access-expression {:tokens tokens :parsed-elements parsed-elements})))
 
-(defn- parse-statement-and-combine [{:keys [tokens parsed-elements]}]
+(defn- parse-statements-and-combine [{:keys [tokens parsed-elements]}]
   (->> {:tokens tokens :parsed-elements []}
         parse-subroutine-statements
        (combine-under-attribute :statements {:parsed-elements parsed-elements})))
@@ -223,7 +221,7 @@
          (parse-expression-and-combine)
          (consume-matching-value :symbol ")")
          (consume-matching-value :symbol "{")
-         (parse-statement-and-combine)
+         (parse-statements-and-combine)
          (consume-matching-value :symbol "}")
          (combine-under-attribute :whileStatement {:parsed-elements parsed-elements})
          (recur))
@@ -243,7 +241,7 @@
   (->> {:tokens tokens :parsed-elements []}
        (consume-matching-value :symbol "{")
        (optionally-parse-subroutine-var-dec)
-       (parse-subroutine-statements)
+       (parse-statements-and-combine)
        (consume-matching-value :symbol "}")
        (combine-under-attribute :subroutineBody {:parsed-elements parsed-elements})))
 
@@ -257,11 +255,9 @@
         recur)))
 
 (defn- optionally-parse-function-arguments [{:keys [tokens parsed-elements]}]
-  (if (looking-at-symbol ")" tokens)
-    {:tokens tokens :parsed-elements parsed-elements}
-    (->> {:tokens tokens :parsed-elements []}
-         parse-function-arguments
-         (combine-under-attribute :parameterList {:parsed-elements parsed-elements}))))
+  (->> {:tokens tokens :parsed-elements []}
+       parse-function-arguments
+       (combine-under-attribute :parameterList {:parsed-elements parsed-elements})))
 
 (defn- parse-subroutine [tokens]
   (->> {:tokens tokens :parsed-elements []}

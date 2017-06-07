@@ -25,6 +25,8 @@
 (def do (create-token :keyword "do"))
 (def l-token (create-token :keyword "let"))
 (def while-t (create-token :keyword "while"))
+(def if-t (create-token :keyword "if"))
+(def else-t (create-token :keyword "else"))
 (def return (create-token :keyword "return"))
 (def foo (create-token :identifier "foo"))
 (def bar (create-token :identifier "bar"))
@@ -266,7 +268,7 @@
       [0 :subroutineBody 1 :statements 0 :returnStatement 2] semicolon)))
 
 ;; { while(foo < bar) { let baz = 3; } }
-(deftest handling-return-with-expression
+(deftest handling-while
   (let [tokens [open-curly while-t open-paren
                 foo less-than bar close-paren
                 open-curly l-token baz equal-t constant semicolon close-curly
@@ -285,6 +287,44 @@
       [0 :subroutineBody 1 :statements 0 :whileStatement 5 :statements 0 :letStatement 3 :expression 0 :term 0] constant
       [0 :subroutineBody 1 :statements 0 :whileStatement 5 :statements 0 :letStatement 4] semicolon
       [0 :subroutineBody 1 :statements 0 :whileStatement 6] close-curly)))
+
+;; { if(foo < bar) { let baz = 3; } }
+(deftest handling-if
+  (let [tokens [open-curly if-t open-paren
+                foo less-than bar close-paren
+                open-curly l-token baz equal-t constant semicolon close-curly
+                close-curly]]
+    (are [path value] (= value (get-in (parse-tokens tokens) path))
+      [0 :subroutineBody 1 :statements 0 :ifStatement 0] if-t
+      [0 :subroutineBody 1 :statements 0 :ifStatement 1] open-paren
+      [0 :subroutineBody 1 :statements 0 :ifStatement 2 :expression 0 :term 0] foo
+      [0 :subroutineBody 1 :statements 0 :ifStatement 2 :expression 1] less-than
+      [0 :subroutineBody 1 :statements 0 :ifStatement 2 :expression 2 :term 0] bar
+      [0 :subroutineBody 1 :statements 0 :ifStatement 3] close-paren
+      [0 :subroutineBody 1 :statements 0 :ifStatement 4] open-curly
+      [0 :subroutineBody 1 :statements 0 :ifStatement 5 :statements 0 :letStatement 0] l-token
+      [0 :subroutineBody 1 :statements 0 :ifStatement 5 :statements 0 :letStatement 1] baz
+      [0 :subroutineBody 1 :statements 0 :ifStatement 5 :statements 0 :letStatement 2] equal-t
+      [0 :subroutineBody 1 :statements 0 :ifStatement 5 :statements 0 :letStatement 3 :expression 0 :term 0] constant
+      [0 :subroutineBody 1 :statements 0 :ifStatement 5 :statements 0 :letStatement 4] semicolon
+      [0 :subroutineBody 1 :statements 0 :ifStatement 6] close-curly)))
+
+;; { if(foo < bar) { let baz = 3; } else { let baz = foo; } }
+(deftest handling-if-else
+  (let [tokens [open-curly if-t open-paren
+                foo less-than bar close-paren
+                open-curly l-token baz equal-t constant semicolon close-curly
+                else-t open-curly l-token baz equal-t foo semicolon close-curly
+                close-curly]]
+    (are [path value] (= value (get-in (parse-tokens tokens) path))
+      [0 :subroutineBody 1 :statements 0 :ifStatement 7] else-t
+      [0 :subroutineBody 1 :statements 0 :ifStatement 8] open-curly
+      [0 :subroutineBody 1 :statements 0 :ifStatement 9 :statements 0 :letStatement 0] l-token
+      [0 :subroutineBody 1 :statements 0 :ifStatement 9 :statements 0 :letStatement 1] baz
+      [0 :subroutineBody 1 :statements 0 :ifStatement 9 :statements 0 :letStatement 2] equal-t
+      [0 :subroutineBody 1 :statements 0 :ifStatement 9 :statements 0 :letStatement 3 :expression 0 :term 0] foo
+      [0 :subroutineBody 1 :statements 0 :ifStatement 9 :statements 0 :letStatement 4] semicolon
+      [0 :subroutineBody 1 :statements 0 :ifStatement 10] close-curly)))
 
 ;; { let foo = 3; let bar = baz; }
 (deftest handling-multiple-statements-within-method-body

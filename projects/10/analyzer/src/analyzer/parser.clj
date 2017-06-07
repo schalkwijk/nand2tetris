@@ -190,6 +190,15 @@
         parse-subroutine-statements
        (combine-under-attribute :statements {:parsed-elements parsed-elements})))
 
+(defn- optionally-parse-else [{:keys [tokens parsed-elements]}]
+  (if (looking-at-keywords ["else"] tokens)
+    (->> {:tokens tokens :parsed-elements parsed-elements}
+         (consume :keyword)
+         (consume-matching-value :symbol "{")
+         (parse-statements-and-combine)
+         (consume-matching-value :symbol "}"))
+    {:tokens tokens :parsed-elements parsed-elements}))
+
 (defn- parse-subroutine-statements [{:keys [tokens parsed-elements]}]
   (cond
     (looking-at-keywords ["do"] tokens)
@@ -212,7 +221,17 @@
          (recur))
 
     (looking-at-keywords ["if"] tokens)
-    {:tokens tokens :parsed-elements parsed-elements}
+    (->> {:tokens tokens :parsed-elements []}
+         (consume :keyword)
+         (consume-matching-value :symbol "(")
+         (parse-expression-and-combine)
+         (consume-matching-value :symbol ")")
+         (consume-matching-value :symbol "{")
+         (parse-statements-and-combine)
+         (consume-matching-value :symbol "}")
+         (optionally-parse-else)
+         (combine-under-attribute :ifStatement {:parsed-elements parsed-elements})
+         (recur))
 
     (looking-at-keywords ["while"] tokens)
     (->> {:tokens tokens :parsed-elements []}

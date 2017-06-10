@@ -1,4 +1,4 @@
-(ns analyzer.vm-command-writer
+(ns compiler.vm-command-writer
   (:require [clojure.string :as str]))
 
 (defn- output [& bits]

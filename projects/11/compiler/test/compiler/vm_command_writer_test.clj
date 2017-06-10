@@ -1,6 +1,6 @@
-(ns analyzer.vm-command-writer-test
-  (:require [analyzer.vm-command-writer :refer :all]
-            [clojure.test :refer :all]))
+(ns compiler.vm-command-writer-test
+  (:require [clojure.test :refer :all]
+            [compiler.vm-command-writer :refer :all]))
 
 (deftest writing-function-declaration
   (is (= "function BankAccount.transfer 3" (write-subroutine-declaration "function" "BankAccount" "transfer" 3))))

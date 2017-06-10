@@ -1,9 +1,9 @@
-(ns analyzer.formatter-test
-  (:require [analyzer.formatter :refer :all]
-            [analyzer.parser :refer [parse-tokens]]
-            [analyzer.tokenizer :refer [tokenize-instructions]]
-            [clojure.test :refer :all]
-            [clojure.xml :as xml]))
+(ns compiler.formatter-test
+  (:require [clojure.test :refer :all]
+            [clojure.xml :as xml]
+            [compiler.formatter :refer :all]
+            [compiler.parser :refer [parse-tokens]]
+            [compiler.tokenizer :refer [tokenize-instructions]]))
 
 (defn parse-xml [xml]
   (xml/parse (java.io.ByteArrayInputStream. (.getBytes xml))))

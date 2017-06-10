@@ -1,4 +1,4 @@
-(ns analyzer.parser)
+(ns compiler.parser)
 
 (declare parse-subroutine-call)
 (declare parse-array-access-expression)

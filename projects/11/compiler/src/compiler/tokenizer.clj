@@ -1,4 +1,4 @@
-(ns analyzer.tokenizer
+(ns compiler.tokenizer
   (:require [clojure.string :as str]))
 
 (def keywords

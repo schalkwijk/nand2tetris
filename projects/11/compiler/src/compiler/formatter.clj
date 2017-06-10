@@ -1,4 +1,4 @@
-(ns analyzer.formatter
+(ns compiler.formatter
   (:require [clojure.string :as str]))
 
 (declare output-parse-tree)

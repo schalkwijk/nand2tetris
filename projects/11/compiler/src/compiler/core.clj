@@ -1,11 +1,11 @@
-(ns analyzer.core
+(ns compiler.core
   (:gen-class)
-  (:require [analyzer.code-generator :refer :all]
-            [analyzer.formatter :refer [output-parse-tree]]
-            [analyzer.tokenizer :refer :all]
-            [analyzer.parser :refer :all]
-            [clojure.java.io :as io]
-            [clojure.string :as str]))
+  (:require [clojure.java.io :as io]
+            [clojure.string :as str]
+            [compiler.compiler :refer :all]
+            [compiler.formatter :refer [output-parse-tree]]
+            [compiler.parser :refer :all]
+            [compiler.tokenizer :refer :all]))
 
 (defn- tokenize-parse-compile-and-output-single-file [filename]
   (let [vm-filename (str/replace filename ".jack" ".vm")]

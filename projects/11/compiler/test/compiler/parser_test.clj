@@ -1,6 +1,6 @@
-(ns analyzer.parser-test
-  (:require  [analyzer.parser :refer :all]
-             [clojure.test :refer :all]))
+(ns compiler.parser-test
+  (:require [clojure.test :refer :all]
+            [compiler.parser :refer :all]))
 
 (defn- create-token [type value]
   {:type type :value value})

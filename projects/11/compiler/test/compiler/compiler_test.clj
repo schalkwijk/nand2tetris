@@ -1,10 +1,10 @@
-(ns analyzer.code-generator-test
-  (:require [analyzer.code-generator :refer :all]
-            [analyzer.parser :refer [parse-tokens]]
-            [analyzer.tokenizer :refer [tokenize-instructions]]
-            [analyzer.formatter :refer [output-parse-tree]]
+(ns compiler.compiler-test
+  (:require [clojure.string :as str]
             [clojure.test :refer :all]
-            [clojure.string :as str]))
+            [compiler.compiler :refer :all]
+            [compiler.formatter :refer [output-parse-tree]]
+            [compiler.parser :refer [parse-tokens]]
+            [compiler.tokenizer :refer [tokenize-instructions]]))
 
 (defn- format-tokens-for-compiler [instructions]
   (with-out-str (output-parse-tree (parse-tokens (tokenize-instructions instructions)))))

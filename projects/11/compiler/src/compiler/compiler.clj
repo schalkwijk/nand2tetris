@@ -1,8 +1,8 @@
-(ns analyzer.code-generator
-  (:require [analyzer.vm-command-writer :as writer]
+(ns compiler.compiler
+  (:require [clojure.string :as str]
             [clojure.xml :as xml]
             [clojure.zip :as zip]
-            [clojure.string :as str]))
+            [compiler.vm-command-writer :as writer]))
 
 (declare compile-expression)
 

@@ -1,6 +1,6 @@
-(ns analyzer.tokenizer-test
-  (:require [analyzer.tokenizer :refer :all]
-            [clojure.test :refer :all]))
+(ns compiler.tokenizer-test
+  (:require [clojure.test :refer :all]
+            [compiler.tokenizer :refer :all]))
 
 (deftest handling-class-declarations
   (are [value location] (= value (nth (tokenize-instruction "class Test { }") location))

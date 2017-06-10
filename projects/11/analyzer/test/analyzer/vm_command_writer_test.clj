@@ -3,19 +3,19 @@
             [clojure.test :refer :all]))
 
 (deftest writing-function-declaration
-  (is (= "function BankAccount.transfer 3\n" (with-out-str (write-subroutine-declaration "function" "BankAccount" "transfer" 3)))))
+  (is (= "function BankAccount.transfer 3" (write-subroutine-declaration "function" "BankAccount" "transfer" 3))))
 
 (deftest writing-constant-push
-  (is (= "push constant 5\n" (with-out-str (write-constant-push 5)))))
+  (is (= "push constant 5" (write-constant-push 5))))
 
 (deftest writing-temp-push
-  (is (= "push temp 5\n" (with-out-str (write-temp-push 5)))))
+  (is (= "push temp 5" (write-temp-push 5))))
 
 (deftest writing-function-call
-  (is (= "call BankAccount.transfer 3\n" (with-out-str (write-subroutine-call "BankAccount" "transfer" 3)))))
+  (is (= "call BankAccount.transfer 3" (write-subroutine-call "BankAccount.transfer" 3))))
 
 (deftest writing-two-term-operator
-  (is (= "add\n" (with-out-str (write-operator "+"))))
-  (is (= "sub\n" (with-out-str (write-operator "-"))))
-  (is (= "call Math.multiply 2\n" (with-out-str (write-operator "*"))))
-  (is (= "call Math.divide 2\n" (with-out-str (write-operator "/")))))
+  (is (= "add" (write-operator "+")))
+  (is (= "sub" (write-operator "-")))
+  (is (= "call Math.multiply 2" (write-operator "*")))
+  (is (= "call Math.divide 2" (write-operator "/"))))

@@ -1,6 +1,7 @@
 (ns compiler.compiler
   (:require [clojure.string :as str]
             [clojure.zip :as zip]
+            [compiler.symbol-table :as st]
             [compiler.zip-helpers :refer :all]
             [compiler.vm-command-writer :as writer]))
 
@@ -60,9 +61,10 @@
 (defn- compile-subroutine [class-name zipper]
   (let [{subroutine-type :value zipper :zipper} (zip-and-apply zipper [])
         {subroutine-name :value zipper :zipper} (zip-and-apply zipper [zip/right zip/right])
-        {number-of-args :value zipper :zipper} (zip-and-apply zipper [zip/right zip/right] zip/children count)
-        commands [(writer/write-subroutine-declaration subroutine-type class-name subroutine-name number-of-args)]]
-
+        {arguments :value zipper :zipper} (zip-and-apply zipper [zip/right zip/right] zip/node zip/xml-zip) ;; isolate arg list
+        symbol-table (st/create-table-for-expression-list arguments)
+        {symbol-table :symbol-table zipper :zipper} (st/add-local-vars-to-table zipper symbol-table)
+        commands [(writer/write-subroutine-declaration subroutine-type class-name subroutine-name 0)]]
     (->> zipper
          zip/right ;; close-paren
          zip/right ;; subroutine body

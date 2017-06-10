@@ -1,26 +1,10 @@
 (ns compiler.compiler
   (:require [clojure.string :as str]
-            [clojure.xml :as xml]
             [clojure.zip :as zip]
+            [compiler.zip-helpers :refer :all]
             [compiler.vm-command-writer :as writer]))
 
 (declare compile-expression)
-
-(defn- zip-str [s]
-  (zip/xml-zip (xml/parse (java.io.ByteArrayInputStream. (.getBytes s)))))
-
-(defn- zip-and-apply [zipper traversal-operations & node-operations]
-  (let [node-operations (if node-operations node-operations [zip/down zip/node])
-        modified-zipper (reduce #(%2 %1) zipper traversal-operations)]
-    {:value (reduce #(%2 %1) modified-zipper node-operations) :zipper modified-zipper}))
-
-
-(defn- consume-content-until-value [value zipper & consumed]
-  (let [consumed (if consumed consumed [])
-        current-node-content (zip/node (zip/down zipper))]
-    (if (= value current-node-content)
-      {:zipper (zip/right zipper) :consumed consumed}
-      (recur value (zip/right zipper) (conj consumed current-node-content)))))
 
 (defn- compile-term [zipper]
   (let [type (:tag (zip/node zipper))
@@ -31,6 +15,7 @@
 
       (and (= content "(") (= type :symbol))
       (compile-expression (zip/down (zip/right zipper)) [])
+
       :else zipper
       )))
 

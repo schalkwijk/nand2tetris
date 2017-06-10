@@ -9,6 +9,12 @@
 (defn- zip-str [s]
   (zip/xml-zip (xml/parse (java.io.ByteArrayInputStream. (.getBytes s)))))
 
+(defn- zip-and-apply [zipper traversal-operations & node-operations]
+  (let [node-operations (if node-operations node-operations [zip/down zip/node])
+        modified-zipper (reduce #(%2 %1) zipper traversal-operations)]
+    {:value (reduce #(%2 %1) modified-zipper node-operations) :zipper modified-zipper}))
+
+
 (defn- consume-content-until-value [value zipper & consumed]
   (let [consumed (if consumed consumed [])
         current-node-content (zip/node (zip/down zipper))]
@@ -67,17 +73,13 @@
       :else commands)))
 
 (defn- compile-subroutine [class-name zipper]
-  (let [subroutine-type (zip/node (zip/down zipper))
-        subroutine-name (zip/node (zip/down (zip/right (zip/right zipper))))
-        number-of-args (count (zip/children (zip/right (zip/right (zip/right (zip/right zipper))))))
+  (let [{subroutine-type :value zipper :zipper} (zip-and-apply zipper [])
+        {subroutine-name :value zipper :zipper} (zip-and-apply zipper [zip/right zip/right])
+        {number-of-args :value zipper :zipper} (zip-and-apply zipper [zip/right zip/right] zip/children count)
         commands [(writer/write-subroutine-declaration subroutine-type class-name subroutine-name number-of-args)]]
 
     (->> zipper
-         zip/right ;; return type
-         zip/right ;; subroutine name
-         zip/right ;; open paren
-         zip/right ;; paremeter list
-         zip/right ;; close paren
+         zip/right ;; close-paren
          zip/right ;; subroutine body
          zip/down ;; in to subroutine body
          zip/next ;; skip over {

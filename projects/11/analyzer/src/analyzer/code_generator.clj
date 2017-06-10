@@ -52,7 +52,6 @@
 
 (defn- compile-subroutine-body [commands subroutine-body]
   (let [statement (:tag (zip/node subroutine-body))]
-    (println (zip/node subroutine-body))
     (cond
       (= statement :doStatement)
       (let [do-statement-commands

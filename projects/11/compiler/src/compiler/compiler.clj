@@ -12,6 +12,7 @@
 (declare compile-statements)
 
 (def if-count (atom -1))
+(def w-count (atom -1))
 
 (defn- pop-into-variable [variable-name symbol-table]
   (let [{segment :scope position :position} (st/get-symbol-by-name variable-name symbol-table)]
@@ -62,10 +63,12 @@
   (reduce #(concat %1 (compile-expression symbol-table (zip/down (zip/xml-zip %2)) [])) [] (zip/children zipper)))
 
 (defn- compile-do-statement [symbol-table do-statement]
-  (let [{zipper :zipper function-call :consumed} (consume-content-until-value "(" (zip/right do-statement))]
+  (let [{zipper :zipper function-call :consumed} (consume-content-until-value "(" (zip/right do-statement))
+        number-of-args (count (filter #(not (= "," (first (:content %)))) (zip/children zipper)))]
     (conj (vec (compile-expression-list symbol-table zipper)) ;; cast to vec so conj behaves correctly
-            (writer/write-subroutine-call (str/join function-call) (count (zip/children zipper)))
-            (str "pop temp 0")))) ;; if it's a do statement, we discard the return value
+          (writer/write-subroutine-call (str/join function-call)
+                                        number-of-args)
+          (str "pop temp 0")))) ;; if it's a do statement, we discard the return value
 
 (defn- compile-let-statement [symbol-table l-statement]
   (let [{variable-name :value zipper :zipper} (zip-and-fetch-node-content l-statement [zip/right])
@@ -96,6 +99,24 @@
         else-body-commands (if maybe-else (compile-statements [] symbol-table (:value (zip-and-apply zipper (repeat 4 zip/right) zip-node-children))) [])]
 
     (concat if-expression-commands if-labels if-body-commands else-labels else-body-commands end-labels)))
+
+(defn- compile-while-statement [symbol-table w-statement]
+  (let [{w-expression :value zipper :zipper} (zip-and-apply w-statement [zip/right zip/right] zip-node-children)
+        w-expression-commands (compile-expression symbol-table w-expression [])
+
+        current-while-count (swap! if-count inc)
+        if-labels [(str "if-goto IF_TRUE" current-while-count)
+                   (str "goto IF_FALSE" current-while-count)
+                   (str "label IF_TRUE" current-while-count)]
+
+        {w-body :value zipper :zipper} (zip-and-apply zipper (repeat 3 zip/right) zip-node-children)
+        w-body-commands (compile-statements [] symbol-table w-body)]
+
+    (concat [(str "label WHILE_EXP" current-while-count)]
+            w-expression-commands
+            ["not" (str "if-goto WHILE_END" current-while-count)]
+            w-body-commands
+            [(str "goto WHILE_EXP" current-while-count) (str "label WHILE_END" current-while-count)])))
 
 (defn- compile-statements [commands symbol-table subroutine-body]
   (if (nil? subroutine-body)
@@ -131,6 +152,14 @@
                   (concat commands))]
          (recur if-statement-commands symbol-table (zip/right subroutine-body)))
 
+       (= statement :whileStatement)
+       (let [w-statement-commands
+             (->> subroutine-body
+                  zip/down ;; go into the while statement body
+                  (compile-while-statement symbol-table)
+                  (concat commands))]
+         (recur w-statement-commands symbol-table (zip/right subroutine-body)))
+
        :else commands))))
 
 (defn- compile-subroutine [class-name zipper]
@@ -163,6 +192,7 @@
 
 (defn compile-code [parse-tree]
   (reset! if-count -1) ;; hack because repl shenanigans
+  (reset! w-count -1) ;; hack because repl shenanigans
   (let [parse-tree-zipper (zip-str parse-tree)
         class-name (zip/node (zip/down (zip/right (zip/down parse-tree-zipper))))
         class-body (zip/right (zip/right (zip/right (zip/down parse-tree-zipper))))]

@@ -56,3 +56,31 @@
       13 "call Math.multiply 2"
       14 "return"
       15 "label IF_END0")))
+
+(deftest while-statements
+  (let [instructions ["class Main {" "function void fillMemory(int startAddress, int length, int value) {" "while (length > 0) {" "do Memory.poke(startAddress, value);" "let length = length - 1;" "let startAddress = startAddress + 1;" "}" "return;" "}" "}"]
+        output (compile-code (format-tokens-for-compiler instructions))]
+    (are [path value] (= (nth output path) value)
+      0 "function Main.fillMemory 0"
+      1 "label WHILE_EXP0"
+      2 "push argument 1"
+      3 "push constant 0"
+      4 "gt"
+      5 "not"
+      6 "if-goto WHILE_END0"
+      7 "push argument 0"
+      8 "push argument 2"
+      9 "call Memory.poke 2"
+      10 "pop temp 0"
+      11 "push argument 1"
+      12 "push constant 1"
+      13 "sub"
+      14 "pop argument 1"
+      15 "push argument 0"
+      16 "push constant 1"
+      17 "add"
+      18 "pop argument 0"
+      19 "goto WHILE_EXP0"
+      20 "label WHILE_END0"
+      21 "push constant 0"
+      22 "return")))

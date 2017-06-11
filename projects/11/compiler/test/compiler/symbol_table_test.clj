@@ -58,3 +58,8 @@
         (create-table-for-expression-list (get-instructions-expression-list ["function int main(Fraction foo, int bar) {}"]))]
     (is (= {:name "foo" :type "Fraction", :position 0 :scope :argument}
            (get-symbol-by-name "foo" symbol-table)))))
+
+(deftest getting-the-number-of-variables-in-scope
+  (let [symbol-table
+        (create-table-for-expression-list (get-instructions-expression-list ["function int main(Fraction foo, int bar) {}"]))]
+    (is (= 2 (get-scope-variable-count :argument symbol-table)))))

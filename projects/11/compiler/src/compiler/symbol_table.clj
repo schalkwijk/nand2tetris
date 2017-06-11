@@ -34,3 +34,6 @@
 
 (defn get-symbol-by-name [symbol-name symbol-table]
   (first (filter #(= (:name %) symbol-name) symbol-table)))
+
+(defn get-scope-variable-count [scope symbol-table]
+  (count (filter #(= (:scope %) scope) symbol-table)))

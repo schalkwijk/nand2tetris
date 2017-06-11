@@ -40,6 +40,9 @@
       (and (= content "-") (= type :symbol))
       (concat (compile-expression symbol-table (zip/right zipper) []) [(writer/write-negation-operator)])
 
+      (and (= content "~") (= type :symbol))
+      (concat (compile-term symbol-table (zip/down (zip/right zipper))) [(writer/write-not-operator)])
+
       (and (= content "true") (= type :keyword))
       [(writer/write-constant-push 0) (writer/write-not-operator)]
 
@@ -104,7 +107,8 @@
         else-labels [(str "goto IF_END" current-if-count) (str "label IF_FALSE" current-if-count)]
         end-labels [(str "label IF_END" current-if-count)]
 
-        maybe-else (= "else" (zip/node (zip/down (zip/right (zip/right zipper)))))
+        maybe-else (and (not (nil? (zip/right (zip/right zipper))))
+                    (= "else" (zip/node (zip/down (zip/right (zip/right zipper))))))
         else-body-commands (if maybe-else (compile-statements [] symbol-table (:value (zip-and-apply zipper (repeat 4 zip/right) zip-node-children))) [])]
 
     (concat if-expression-commands if-labels if-body-commands else-labels else-body-commands end-labels)))

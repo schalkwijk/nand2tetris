@@ -11,26 +11,26 @@
       (recur (conj table {:name argument-name :type argument-type :position count :scope :argument})
              (zip/right zipper) (inc count)))))
 
-(defn- add-local-var-to-table [table zipper counter]
+(defn- add-local-var-to-table [original-table-size table zipper counter]
   (let [type (zip/node (zip/down zipper))
         vars-and-symbols (zip/rights zipper)]
     (:table (reduce #(assoc-in (assoc %1 :counter (inc (:counter %1)))
-                               [:table (:counter %1)] {:name (first (:content %2)) :type type :position (:counter %1) :scope :local})
-             {:table table :counter counter}
-             (into [] (filter #(not (= (:tag %) :symbol)) vars-and-symbols))))))
+                               [:table (+ original-table-size (:counter %1))] {:name (first (:content %2)) :type type :position (:counter %1) :scope :local})
+                    {:table table :counter counter}
+                    (into [] (filter #(not (= (:tag %) :symbol)) vars-and-symbols))))))
 
-(defn- recur-add-local-vars-to-table [table zipper counter]
+(defn- recur-add-local-vars-to-table [table zipper counter original-table-size]
   (if (not (= :varDec (:tag (zip/node zipper))))
     {:symbol-table table :zipper zipper}
     (let [var-zipper (zip/right (zip/down (zip/xml-zip (zip/node zipper))))
-          table (add-local-var-to-table table var-zipper counter)]
-      (recur table (zip/right zipper) (count (filter #(= (:scope %) :local) table))))))
+          table (add-local-var-to-table original-table-size table var-zipper counter)]
+      (recur table (zip/right zipper) (count (filter #(= (:scope %) :local) table)) original-table-size))))
 
 (defn create-table-for-expression-list [zipper]
   (add-argument-to-table [] (zip/down zipper) 0))
 
 (defn add-local-vars-to-table [zipper table]
-  (recur-add-local-vars-to-table table zipper 0))
+  (recur-add-local-vars-to-table table zipper 0 (count table)))
 
 (defn get-symbol-by-name [symbol-name symbol-table]
   (first (filter #(= (:name %) symbol-name) symbol-table)))

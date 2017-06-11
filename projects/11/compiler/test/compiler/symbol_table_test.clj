@@ -53,6 +53,14 @@
          (:symbol-table (add-local-vars-to-table
            (get-method-body ["function int main() { var Fraction foo; var int bar, baz; }"]) [])))))
 
+(deftest local-variables-dont-clobber-args
+  (is (= [{:name "foo" :type "Fraction", :position 0 :scope :argument}
+          {:name "bar" :type "int", :position 0 :scope :local}
+          {:name "baz" :type "int", :position 1 :scope :local}]
+         (:symbol-table (add-local-vars-to-table
+                         (get-method-body ["function int main(Fraction foo) { var int bar, baz; }"])
+                         [{:name "foo" :type "Fraction", :position 0 :scope :argument}])))))
+
 (deftest getting-a-symbol-by-name
   (let [symbol-table
         (create-table-for-expression-list (get-instructions-expression-list ["function int main(Fraction foo, int bar) {}"]))]

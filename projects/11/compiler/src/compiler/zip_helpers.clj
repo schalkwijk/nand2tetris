@@ -7,6 +7,7 @@
         modified-zipper (reduce #(%2 %1) zipper traversal-operations)]
     {:value (reduce #(%2 %1) modified-zipper node-operations) :zipper modified-zipper}))
 
+;; TODO make this move the zipper right!
 (defn zip-and-fetch-node-content [zipper traversal-operations]
   (zip-and-apply zipper traversal-operations [zip/down zip/node]))
 

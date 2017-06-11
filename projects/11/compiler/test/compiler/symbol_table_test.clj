@@ -42,14 +42,19 @@
        ))
 
 (deftest symbol-table-for-expression-list
-  (is (= {:argument [{:name "foo" :type "Fraction", :position 0}
-                     {:name "bar" :type "int", :position 1}]}
+  (is (= [{:name "foo" :type "Fraction", :position 0 :scope :argument}
+          {:name "bar" :type "int", :position 1 :scope :argument}]
          (create-table-for-expression-list (get-instructions-expression-list ["function int main(Fraction foo, int bar) {}"])))))
 
 (deftest symbol-table-for-local-variables
-  (is (= {:local [{:name "foo" :type "Fraction", :position 0}
-                  {:name "bar" :type "int", :position 1}
-                  {:name "baz" :type "int", :position 2}]}
+  (is (= [{:name "foo" :type "Fraction", :position 0 :scope :local}
+          {:name "bar" :type "int", :position 1 :scope :local}
+          {:name "baz" :type "int", :position 2 :scope :local}]
          (:symbol-table (add-local-vars-to-table
-           (get-method-body ["function int main() { var Fraction foo; var int bar, baz; }"])
-           {})))))
+           (get-method-body ["function int main() { var Fraction foo; var int bar, baz; }"]) [])))))
+
+(deftest getting-a-symbol-by-name
+  (let [symbol-table
+        (create-table-for-expression-list (get-instructions-expression-list ["function int main(Fraction foo, int bar) {}"]))]
+    (is (= {:name "foo" :type "Fraction", :position 0 :scope :argument}
+           (get-symbol-by-name "foo" symbol-table)))))

@@ -35,3 +35,24 @@
       3 "pop local 0"
       4 "push local 0"
       5 "return")))
+
+(deftest if-else-statements
+  (let [instructions ["class Main {" "function int nextMask(int mask) {" "if (mask = 0) {" "return 1;" "}" "else {" "return mask * 2;" "}" "}" "}"]
+        output (compile-code (format-tokens-for-compiler instructions))]
+    (are [path value] (= (nth output path) value)
+      0 "function Main.nextMask 0"
+      1 "push argument 0"
+      2 "push constant 0"
+      3 "eq"
+      4 "if-goto IF_TRUE0"
+      5 "goto IF_FALSE0"
+      6 "label IF_TRUE0"
+      7 "push constant 1"
+      8 "return"
+      9 "goto IF_END0"
+      10 "label IF_FALSE0"
+      11 "push argument 0"
+      12 "push constant 2"
+      13 "call Math.multiply 2"
+      14 "return"
+      15 "label IF_END0")))

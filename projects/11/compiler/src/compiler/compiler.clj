@@ -5,8 +5,13 @@
             [compiler.zip-helpers :refer :all]
             [compiler.vm-command-writer :as writer]))
 
+(def zip-node-children [zip/node zip/xml-zip zip/down])
+
 (declare compile-expression)
 (declare compile-expression-list)
+(declare compile-statements)
+
+(def if-count (atom -1))
 
 (defn- pop-into-variable [variable-name symbol-table]
   (let [{segment :scope position :position} (st/get-symbol-by-name variable-name symbol-table)]
@@ -32,7 +37,6 @@
       (compile-expression symbol-table (zip/down (zip/right zipper)) [])
 
       (= type :identifier)
-
       (let [next-token (zip/right zipper)
             token (if next-token (zip/node (zip/down next-token)) "")]
         (if (or (= "(" token) (= "." token))
@@ -73,31 +77,61 @@
     [(writer/write-constant-push 0) "return"]
     (conj (vec (compile-expression symbol-table (zip/down (zip/right (zip/down return-statement))) [])) "return")))
 
-(defn- compile-subroutine-body [commands symbol-table subroutine-body]
-  (let [statement (:tag (zip/node subroutine-body))]
-    (cond
-      (= statement :doStatement)
-      (let [do-statement-commands
-            (->> subroutine-body
-                 zip/down ;; go into the do statement body
-                 (compile-do-statement symbol-table)
-                 (concat commands))]
-        (recur do-statement-commands symbol-table (zip/right subroutine-body)))
+(defn- compile-if-statement [symbol-table if-statement]
+  (let [{if-expression :value zipper :zipper} (zip-and-apply if-statement [zip/right zip/right] zip-node-children)
+        if-expression-commands (compile-expression symbol-table if-expression [])
 
-      (= statement :returnStatement)
-      (->> subroutine-body
-           (compile-return symbol-table)
-           (concat commands))
+        current-if-count (swap! if-count inc)
+        if-labels [(str "if-goto IF_TRUE" current-if-count)
+                   (str "goto IF_FALSE" current-if-count)
+                   (str "label IF_TRUE" current-if-count)]
 
-      (= statement :letStatement)
-      (let [l-statement-commands
-            (->> subroutine-body
-                 zip/down ;; go into the do statement body
-                 (compile-let-statement symbol-table)
-                 (concat commands))]
-        (recur l-statement-commands symbol-table (zip/right subroutine-body)))
+        {if-body :value zipper :zipper} (zip-and-apply zipper (repeat 3 zip/right) zip-node-children)
+        if-body-commands (compile-statements [] symbol-table if-body)
 
-      :else commands)))
+        else-labels [(str "goto IF_END" current-if-count) (str "label IF_FALSE" current-if-count)]
+        end-labels [(str "label IF_END" current-if-count)]
+
+        maybe-else (= "else" (zip/node (zip/down (zip/right (zip/right zipper)))))
+        else-body-commands (if maybe-else (compile-statements [] symbol-table (:value (zip-and-apply zipper (repeat 4 zip/right) zip-node-children))) [])]
+
+    (concat if-expression-commands if-labels if-body-commands else-labels else-body-commands end-labels)))
+
+(defn- compile-statements [commands symbol-table subroutine-body]
+  (if (nil? subroutine-body)
+    commands
+    (let [statement (:tag (zip/node subroutine-body))]
+     (cond
+       (= statement :doStatement)
+       (let [do-statement-commands
+             (->> subroutine-body
+                  zip/down ;; go into the do statement body
+                  (compile-do-statement symbol-table)
+                  (concat commands))]
+         (recur do-statement-commands symbol-table (zip/right subroutine-body)))
+
+       (= statement :returnStatement)
+       (->> subroutine-body
+            (compile-return symbol-table)
+            (concat commands))
+
+       (= statement :letStatement)
+       (let [l-statement-commands
+             (->> subroutine-body
+                  zip/down ;; go into the let statement body
+                  (compile-let-statement symbol-table)
+                  (concat commands))]
+         (recur l-statement-commands symbol-table (zip/right subroutine-body)))
+
+       (= statement :ifStatement)
+       (let [if-statement-commands
+             (->> subroutine-body
+                  zip/down ;; go into the if statement body
+                  (compile-if-statement symbol-table)
+                  (concat commands))]
+         (recur if-statement-commands symbol-table (zip/right subroutine-body)))
+
+       :else commands))))
 
 (defn- compile-subroutine [class-name zipper]
   (let [{subroutine-type :value zipper :zipper} (fetch-node-content zipper)
@@ -113,7 +147,7 @@
 
     (->> zipper
          zip/down ;; go into statements
-         (compile-subroutine-body [] symbol-table)
+         (compile-statements [] symbol-table)
          (concat commands))))
 
 (defn- compile-class [class-name class-zipper commands]
@@ -128,6 +162,7 @@
     :else commands))
 
 (defn compile-code [parse-tree]
+  (reset! if-count -1) ;; hack because repl shenanigans
   (let [parse-tree-zipper (zip-str parse-tree)
         class-name (zip/node (zip/down (zip/right (zip/down parse-tree-zipper))))
         class-body (zip/right (zip/right (zip/right (zip/down parse-tree-zipper))))]

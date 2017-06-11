@@ -6,8 +6,8 @@
   (if (nil? zipper)
     table
     (let [zipper (if (= (zip/node (zip/down zipper)) ",") (zip/right zipper) zipper)
-          {argument-type :value zipper :zipper} (zip-and-apply zipper [])
-          {argument-name :value zipper :zipper} (zip-and-apply zipper [zip/right])]
+          {argument-type :value zipper :zipper} (fetch-node-content zipper)
+          {argument-name :value zipper :zipper} (zip-and-fetch-node-content zipper [zip/right])]
       (recur (assoc-in table [:argument count] {:name argument-name :type argument-type :position count})
              (zip/right zipper) (inc count)))))
 

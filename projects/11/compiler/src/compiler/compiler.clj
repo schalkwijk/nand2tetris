@@ -59,11 +59,14 @@
       :else commands)))
 
 (defn- compile-subroutine [class-name zipper]
-  (let [{subroutine-type :value zipper :zipper} (zip-and-apply zipper [])
-        {subroutine-name :value zipper :zipper} (zip-and-apply zipper [zip/right zip/right])
-        {arguments :value zipper :zipper} (zip-and-apply zipper [zip/right zip/right] zip/node zip/xml-zip) ;; isolate arg list
+  (let [{subroutine-type :value zipper :zipper} (fetch-node-content zipper)
+        {subroutine-name :value zipper :zipper} (zip-and-fetch-node-content zipper [zip/right zip/right])
+
+        {arguments :value zipper :zipper} (zip-and-apply zipper [zip/right zip/right] [zip/node  zip/xml-zip]) ;; isolate arg list
         symbol-table (st/create-table-for-expression-list arguments)
-        {symbol-table :symbol-table zipper :zipper} (st/add-local-vars-to-table (zip/next (zip/next (zip/down (zip/right (zip/right zipper))))) symbol-table)
+        zipper (zip-and-discard zipper [zip/right zip/right zip/down zip/next zip/next])
+
+        {symbol-table :symbol-table zipper :zipper} (st/add-local-vars-to-table zipper symbol-table)
         commands [(writer/write-subroutine-declaration subroutine-type class-name subroutine-name 0)]]
     (->> zipper
          zip/down ;; go into statements

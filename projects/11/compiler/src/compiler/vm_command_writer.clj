@@ -29,5 +29,9 @@
      "-" "sub"
      "~" "neq"
      "=" "eq"
+     ">" "gt"
+     "<" "lt"
+     "&" "and"
+     "|" "or"
      "*" ["call" "Math.multiply" "2"]
      "/" ["call" "Math.divide" "2"])))

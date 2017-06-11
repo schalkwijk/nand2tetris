@@ -19,6 +19,9 @@
 (defn write-subroutine-call [subroutine-name number-of-args]
   (output "call" subroutine-name number-of-args))
 
+(defn write-segment-pop [segment index]
+  (output "pop" segment index))
+
 (defn write-operator [operator]
   (output
    (case operator

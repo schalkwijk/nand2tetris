@@ -11,7 +11,7 @@
 (deftest writing-temp-push
   (is (= "push temp 5" (write-temp-push 5))))
 
-(deftest writing-to-segment
+(deftest writing-segment-push
   (is (= "push segment 5" (write-segment-push "segment" 5))))
 
 (deftest writing-function-call
@@ -22,3 +22,6 @@
   (is (= "sub" (write-operator "-")))
   (is (= "call Math.multiply 2" (write-operator "*")))
   (is (= "call Math.divide 2" (write-operator "/"))))
+
+(deftest writing-segment-pop
+  (is (= "pop segment 5" (write-segment-pop "segment" 5))))

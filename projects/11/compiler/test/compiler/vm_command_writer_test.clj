@@ -30,6 +30,10 @@
   (is (= "call Math.divide 2" (write-operator "/"))))
 
 (deftest writing-one-term-operator
+  (is (= "neg" (write-negation-operator)))
+  (is (= "not" (write-not-operator))))
+
+(deftest writing-one-term-operator
   (is (= "neg" (write-negation-operator))))
 
 (deftest writing-segment-pop

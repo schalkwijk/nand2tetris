@@ -98,3 +98,24 @@
       6 "pop temp 0"
       7 "push constant 0"
       8 "return")))
+
+(deftest fixed-true-constant
+  (let [instructions ["class Main {" "function void fillMemory(int startAddress, int length, int value) {" "var boolean loop;" "let loop = true;" "return;" "}" "}"]
+        output (compile-code (format-tokens-for-compiler instructions))]
+    (are [path value] (= (nth output path) value)
+      0 "function Main.fillMemory 1"
+      1 "push constant 0"
+      2 "not"
+      3 "pop local 0"
+      4 "push constant 0"
+      5 "return")))
+
+(deftest fixed-false-constant
+  (let [instructions ["class Main {" "function void fillMemory(int startAddress, int length, int value) {" "var boolean loop;" "let loop = false;" "return;" "}" "}"]
+        output (compile-code (format-tokens-for-compiler instructions))]
+    (are [path value] (= (nth output path) value)
+      0 "function Main.fillMemory 1"
+      1 "push constant 0"
+      2 "pop local 0"
+      3 "push constant 0"
+      4 "return")))

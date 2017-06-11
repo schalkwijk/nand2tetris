@@ -25,6 +25,9 @@
 (defn write-negation-operator []
   (output "neg"))
 
+(defn write-not-operator []
+  (output "not"))
+
 (defn write-operator [operator]
   (output
    (case operator

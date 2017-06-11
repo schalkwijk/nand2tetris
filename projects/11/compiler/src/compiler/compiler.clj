@@ -40,6 +40,12 @@
       (and (= content "-") (= type :symbol))
       (concat (compile-expression symbol-table (zip/right zipper) []) [(writer/write-negation-operator)])
 
+      (and (= content "true") (= type :keyword))
+      [(writer/write-constant-push 0) (writer/write-not-operator)]
+
+      (and (= content "false") (= type :keyword))
+      [(writer/write-constant-push 0)]
+
       (= type :identifier)
       (let [next-token (zip/right zipper)
             token (if next-token (zip/node (zip/down next-token)) "")]
@@ -47,7 +53,7 @@
           (compile-subroutine-call symbol-table zipper)
           [(push-variable content symbol-table)]))
 
-      :else zipper)))
+      :else [])))
 
 (defn- compile-expression [symbol-table zipper commands]
   (if (nil? zipper)
@@ -107,7 +113,7 @@
   (let [{w-expression :value zipper :zipper} (zip-and-apply w-statement [zip/right zip/right] zip-node-children)
         w-expression-commands (compile-expression symbol-table w-expression [])
 
-        current-while-count (swap! if-count inc)
+        current-while-count (swap! w-count inc)
         if-labels [(str "if-goto IF_TRUE" current-while-count)
                    (str "goto IF_FALSE" current-while-count)
                    (str "label IF_TRUE" current-while-count)]

@@ -11,6 +11,9 @@
 (deftest writing-temp-push
   (is (= "push temp 5" (write-temp-push 5))))
 
+(deftest writing-to-segment
+  (is (= "push segment 5" (write-segment-push "segment" 5))))
+
 (deftest writing-function-call
   (is (= "call BankAccount.transfer 3" (write-subroutine-call "BankAccount.transfer" 3))))
 

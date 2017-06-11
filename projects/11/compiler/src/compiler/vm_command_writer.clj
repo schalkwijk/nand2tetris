@@ -7,11 +7,14 @@
 (defn write-subroutine-declaration [subroutine-type class-name subroutine-name number-of-args]
   (output subroutine-type (str class-name "." subroutine-name) number-of-args))
 
+(defn write-segment-push [segment index]
+  (output "push" segment index))
+
 (defn write-constant-push [constant]
-  (output "push" "constant" constant))
+  (write-segment-push "constant" constant))
 
 (defn write-temp-push [index]
-  (output "push" "temp" index))
+  (write-segment-push "temp" index))
 
 (defn write-subroutine-call [subroutine-name number-of-args]
   (output "call" subroutine-name number-of-args))

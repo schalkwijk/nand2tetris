@@ -84,3 +84,17 @@
       20 "label WHILE_END0"
       21 "push constant 0"
       22 "return")))
+
+(deftest negative-constant
+  (let [instructions ["class Main {" "function void fillMemory(int startAddress, int length, int value) {" "do Main.fillMemory(8001, 16, -1);" "return;" "}" "}"]
+        output (compile-code (format-tokens-for-compiler instructions))]
+    (are [path value] (= (nth output path) value)
+      0 "function Main.fillMemory 0"
+      1 "push constant 8001"
+      2 "push constant 16"
+      3 "push constant 1"
+      4 "neg"
+      5 "call Main.fillMemory 3"
+      6 "pop temp 0"
+      7 "push constant 0"
+      8 "return")))

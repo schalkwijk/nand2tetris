@@ -22,12 +22,15 @@
 (defn write-segment-pop [segment index]
   (output "pop" segment index))
 
+(defn write-negation-operator []
+  (output "neg"))
+
 (defn write-operator [operator]
   (output
    (case operator
      "+" "add"
      "-" "sub"
-     "~" "neq"
+     "~" "neg"
      "=" "eq"
      ">" "gt"
      "<" "lt"

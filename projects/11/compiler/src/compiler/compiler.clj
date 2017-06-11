@@ -37,6 +37,9 @@
       (and (= content "(") (= type :symbol))
       (compile-expression symbol-table (zip/down (zip/right zipper)) [])
 
+      (and (= content "-") (= type :symbol))
+      (concat (compile-expression symbol-table (zip/right zipper) []) [(writer/write-negation-operator)])
+
       (= type :identifier)
       (let [next-token (zip/right zipper)
             token (if next-token (zip/node (zip/down next-token)) "")]

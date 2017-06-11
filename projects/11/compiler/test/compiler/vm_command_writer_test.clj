@@ -19,6 +19,8 @@
 
 (deftest writing-two-term-operator
   (is (= "add" (write-operator "+")))
+  (is (= "eq" (write-operator "=")))
+  (is (= "neq" (write-operator "~")))
   (is (= "sub" (write-operator "-")))
   (is (= "call Math.multiply 2" (write-operator "*")))
   (is (= "call Math.divide 2" (write-operator "/"))))

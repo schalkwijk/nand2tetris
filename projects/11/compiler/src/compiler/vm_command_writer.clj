@@ -27,5 +27,7 @@
    (case operator
      "+" "add"
      "-" "sub"
+     "~" "neq"
+     "=" "eq"
      "*" ["call" "Math.multiply" "2"]
      "/" ["call" "Math.divide" "2"])))

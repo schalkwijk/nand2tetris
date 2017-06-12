@@ -12,7 +12,7 @@
   (zip-and-apply zipper traversal-operations [zip/down zip/node]))
 
 (defn fetch-node-content [zipper]
-  (zip-and-fetch-node-content zipper []))
+  (:value (zip-and-fetch-node-content zipper [])))
 
 (defn zip-and-discard [zipper traversal-operations]
   (reduce #(%2 %1) zipper traversal-operations))

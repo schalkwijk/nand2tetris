@@ -15,7 +15,7 @@
   (if (nil? zipper)
     table
     (let [zipper (if (= (zip/node (zip/down zipper)) ",") (zip/right zipper) zipper)
-          {argument-type :value zipper :zipper} (fetch-node-content zipper)
+          argument-type (fetch-node-content zipper)
           {argument-name :value zipper :zipper} (zip-and-fetch-node-content zipper [zip/right])]
       (recur (conj table {:name argument-name :type argument-type :position count :scope :argument})
              (zip/right zipper) (inc count)))))
@@ -25,9 +25,9 @@
     (conj table {:name var-name :type var-type :position current-var-count :scope (get var-keyword-to-scope var-keyword)})))
 
 (defn- add-vars-to-table [original-table-size table zipper counter]
-  (let [var-keyword (zip/node (zip/down zipper))
-        type (zip/node (zip/down (zip/right zipper)))
-        vars-and-symbols (zip/rights (zip/right zipper))]
+  (let [var-keyword (fetch-node-content zipper)
+        {type :value zipper :zipper} (zip-and-fetch-node-content zipper [zip/right])
+        vars-and-symbols (zip/rights zipper)]
     (reduce #(add-local-var-to-table var-keyword type (first (:content %2)) %1) table
             (filter #(not (= (:tag %) :symbol)) vars-and-symbols))))
 

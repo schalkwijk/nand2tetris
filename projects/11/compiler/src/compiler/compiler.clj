@@ -183,7 +183,7 @@
        :else commands))))
 
 (defn- compile-subroutine [class-name zipper]
-  (let [{subroutine-type :value zipper :zipper} (fetch-node-content zipper)
+  (let [subroutine-type (fetch-node-content zipper)
         {subroutine-name :value zipper :zipper} (zip-and-fetch-node-content zipper [zip/right zip/right])
 
         {arguments :value zipper :zipper} (zip-and-apply zipper [zip/right zip/right] [zip/node  zip/xml-zip]) ;; isolate arg list

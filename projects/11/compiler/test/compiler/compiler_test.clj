@@ -161,3 +161,19 @@
       34 "label IF_END0"
       35 "push constant 0"
       36 "return")))
+
+(deftest calling-methods-on-objects
+  (let [instructions ["class Main {" "function void main() {" "var SquareGame game;" "let game = SquareGame.new();" "do game.run();" "do game.dispose();" "return;" "}" "}"]
+        output (compile-code (format-tokens-for-compiler instructions))]
+    (are [path value] (= (nth output path) value)
+      0 "function Main.main 1"
+      1 "call SquareGame.new 0"
+      2 "pop local 0"
+      3 "push local 0"
+      4 "call SquareGame.run 1"
+      5 "pop temp 0"
+      6 "push local 0"
+      7 "call SquareGame.dispose 1"
+      8 "pop temp 0"
+      9 "push constant 0"
+      10 "return")))

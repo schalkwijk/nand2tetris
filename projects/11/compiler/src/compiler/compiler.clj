@@ -22,10 +22,18 @@
   (let [{segment :scope position :position} (st/get-symbol-by-name variable-name symbol-table)]
     (writer/write-segment-push (name segment) position)))
 
+(defn- maybe-compile-instance-method-call [symbol-table call-bits number-of-args zipper]
+  (let [maybe-known-symbol (st/get-symbol-by-name (first call-bits) symbol-table)]
+    (if (nil? maybe-known-symbol)
+      [(writer/write-subroutine-call (str/join call-bits) number-of-args)]
+      [(writer/write-segment-push (name (:scope maybe-known-symbol)) (:position maybe-known-symbol))
+       (writer/write-subroutine-call (str/join (conj (rest call-bits) (:type maybe-known-symbol))) (inc number-of-args))])))
+
 (defn- compile-subroutine-call [symbol-table zipper]
-  (let [{zipper :zipper function-call :consumed} (consume-content-until-value "(" zipper)]
-    (conj (vec (compile-expression-list symbol-table zipper)) ;; cast to vec so conj behaves correctly
-          (writer/write-subroutine-call (str/join function-call) (count (zip/children zipper))))))
+  (let [{zipper :zipper function-call :consumed} (consume-content-until-value "(" zipper)
+        number-of-args (count (zip/children zipper))]
+    (concat (compile-expression-list symbol-table zipper)
+            (maybe-compile-instance-method-call symbol-table function-call number-of-args zipper))))
 
 (defn- compile-term [symbol-table zipper]
   (let [type (:tag (zip/node zipper))
@@ -77,10 +85,9 @@
 (defn- compile-do-statement [symbol-table do-statement]
   (let [{zipper :zipper function-call :consumed} (consume-content-until-value "(" (zip/right do-statement))
         number-of-args (count (filter #(not (= "," (first (:content %)))) (zip/children zipper)))]
-    (conj (vec (compile-expression-list symbol-table zipper)) ;; cast to vec so conj behaves correctly
-          (writer/write-subroutine-call (str/join function-call)
-                                        number-of-args)
-          (str "pop temp 0")))) ;; if it's a do statement, we discard the return value
+    (concat (compile-expression-list symbol-table zipper)
+          (maybe-compile-instance-method-call symbol-table function-call number-of-args zipper)
+          [(str "pop temp 0")]))) ;; if it's a do statement, we discard the return value
 
 (defn- compile-let-statement [symbol-table l-statement]
   (let [{variable-name :value zipper :zipper} (zip-and-fetch-node-content l-statement [zip/right])

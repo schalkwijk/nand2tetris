@@ -7,29 +7,28 @@
             [compiler.tokenizer :refer [tokenize-instructions]]
             [compiler.zip-helpers :refer [zip-str]]))
 
-(defn- get-instructions-expression-list [instructions]
+(defn- zip-instructions [instructions]
   (->> instructions
        tokenize-instructions
        parse-tokens
        output-parse-tree
        with-out-str
-       zip-str
+       zip-str))
+
+(defn- get-instructions-expression-list [instructions]
+  (->> instructions
+       zip-instructions
        zip/down
        zip/right
        zip/right
        zip/right
        zip/right
        zip/node
-       zip/xml-zip
-       ))
+       zip/xml-zip))
 
 (defn- get-method-body [instructions]
   (->> instructions
-       tokenize-instructions
-       parse-tokens
-       output-parse-tree
-       with-out-str
-       zip-str
+       zip-instructions
        zip/down
        zip/right ;; int
        zip/right ;; main
@@ -41,22 +40,31 @@
        zip/right ;; skip over {
        ))
 
+(defn- get-var-dec [instructions]
+  (->> instructions
+       zip-instructions
+       zip/down ;; into class
+       zip/right ;; class name
+       zip/right ;; open curly
+       zip/right ;; var decs
+       ))
+
 (deftest symbol-table-for-expression-list
   (is (= [{:name "foo" :type "Fraction", :position 0 :scope :argument}
-          {:name "bar" :type "int", :position 1 :scope :argument}]
+          {:name "bar" :type "int" :position 1 :scope :argument}]
          (create-table-for-expression-list (get-instructions-expression-list ["function int main(Fraction foo, int bar) {}"])))))
 
 (deftest symbol-table-for-local-variables
   (is (= [{:name "foo" :type "Fraction", :position 0 :scope :local}
-          {:name "bar" :type "int", :position 1 :scope :local}
-          {:name "baz" :type "int", :position 2 :scope :local}]
+          {:name "bar" :type "int" :position 1 :scope :local}
+          {:name "baz" :type "int" :position 2 :scope :local}]
          (:symbol-table (add-local-vars-to-table
            (get-method-body ["function int main() { var Fraction foo; var int bar, baz; }"]) [])))))
 
 (deftest local-variables-dont-clobber-args
   (is (= [{:name "foo" :type "Fraction", :position 0 :scope :argument}
-          {:name "bar" :type "int", :position 0 :scope :local}
-          {:name "baz" :type "int", :position 1 :scope :local}]
+          {:name "bar" :type "int" :position 0 :scope :local}
+          {:name "baz" :type "int" :position 1 :scope :local}]
          (:symbol-table (add-local-vars-to-table
                          (get-method-body ["function int main(Fraction foo) { var int bar, baz; }"])
                          [{:name "foo" :type "Fraction", :position 0 :scope :argument}])))))
@@ -71,3 +79,13 @@
   (let [symbol-table
         (create-table-for-expression-list (get-instructions-expression-list ["function int main(Fraction foo, int bar) {}"]))]
     (is (= 2 (get-scope-variable-count :argument symbol-table)))))
+
+(deftest creating-an-empty-symbol-table
+  (is (= [] (create-empty-symbol-table))))
+
+(deftest adding-class-variables-to-syntax-table
+  (let [var-dec (get-var-dec ["class Main { field int x,y; static Foo z;}"])]
+    (is (= [{:name "x" :type "int" :position 0 :scope :this}
+            {:name "y" :type "int" :position 1 :scope :this}
+            {:name "z" :type "Foo" :position 0 :scope :static}]
+           (:symbol-table (add-class-variables var-dec []))))))

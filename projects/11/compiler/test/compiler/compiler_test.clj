@@ -177,3 +177,5 @@
       8 "pop temp 0"
       9 "push constant 0"
       10 "return")))
+
+;; need test for multiple methods without colliding symbol tables

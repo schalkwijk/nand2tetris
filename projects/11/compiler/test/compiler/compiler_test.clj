@@ -215,5 +215,16 @@
       12 "push constant 0"
       13 "return")))
 
-;; write test that handles method (not function!) definitions
+(deftest calling-methods-on-objects-with-more-than-one-arg
+  (let [instructions ["class Main {" "function void main() {" "var SquareGame game;" "let game = SquareGame.new(1, 2);" "return;" "}" "}"]
+        output (compile-code (format-tokens-for-compiler instructions))]
+    (are [path value] (= (nth output path) value)
+      0 "function Main.main 1"
+      1 "push constant 1"
+      2 "push constant 2"
+      3 "call SquareGame.new 2"
+      4 "pop local 0"
+      5 "push constant 0"
+      6 "return")))
+
 ;; write test for calling method on class that has same name as local var

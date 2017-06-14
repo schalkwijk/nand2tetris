@@ -37,7 +37,7 @@
 
 (defn- compile-subroutine-call [symbol-table class-name zipper]
   (let [{zipper :zipper function-call :consumed} (consume-content-until-value "(" zipper)
-        number-of-args (count (zip/children zipper))]
+        number-of-args (count (filter #(not (= (first (:content %)) ",")) (zip/children zipper)))]
     (concat (compile-expression-list symbol-table class-name zipper)
             (compile-subroutine-call-with-correct-class symbol-table class-name function-call number-of-args zipper))))
 

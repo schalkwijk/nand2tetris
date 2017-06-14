@@ -179,3 +179,19 @@
       10 "return")))
 
 ;; need test for multiple methods without colliding symbol tables
+(deftest constructors-and-instance-level-fields
+  (let [instructions ["class Square {" "field int x, y;" "field int size;" "constructor Square new(int Ax, int Ay, int Asize) {" "let x = Ax;" "let y = Ay;" "let size = Asize;" "return this;" "}" "}"]
+        output (compile-code (format-tokens-for-compiler instructions))]
+    (are [path value] (= (nth output path) value)
+      0 "function Square.new 0"
+      1 "push constant 3"
+      2 "call Memory.alloc 1"
+      3 "pop pointer 0"
+      4 "push argument 0"
+      5 "pop this 0"
+      6 "push argument 1"
+      7 "pop this 1"
+      8 "push argument 2"
+      9 "pop this 2"
+      10 "push pointer 0"
+      11 "return")))

@@ -57,6 +57,9 @@
       (and (= content "false") (= type :keyword))
       [(writer/write-constant-push 0)]
 
+      (and (= content "this") (= type :keyword))
+      [(writer/write-segment-push "pointer" 0)]
+
       (= type :identifier)
       (let [next-token (zip/right zipper)
             token (if next-token (zip/node (zip/down next-token)) "")]
@@ -182,33 +185,43 @@
 
        :else commands))))
 
-(defn- compile-subroutine [class-name zipper]
+(defn- compile-constructor [symbol-table]
+  [(writer/write-constant-push (st/get-scope-variable-count :this symbol-table))
+   (writer/write-subroutine-call "Memory.alloc" 1)
+   (writer/write-segment-pop "pointer" 0)])
+
+(defn- compile-subroutine [class-name symbol-table zipper]
   (let [subroutine-type (fetch-node-content zipper)
         {subroutine-name :value zipper :zipper} (zip-and-fetch-node-content zipper [zip/right zip/right])
 
         {arguments :value zipper :zipper} (zip-and-apply zipper [zip/right zip/right] [zip/node  zip/xml-zip]) ;; isolate arg list
-        symbol-table (st/create-table-for-expression-list arguments [])
+        symbol-table (st/create-table-for-expression-list arguments symbol-table)
         zipper (zip-and-discard zipper [zip/right zip/right zip/down zip/next zip/next])
 
         {symbol-table :symbol-table zipper :zipper} (st/add-local-vars-to-table zipper symbol-table)
         local-var-count (st/get-scope-variable-count :local symbol-table)
         commands [(writer/write-subroutine-declaration class-name subroutine-name local-var-count)]]
 
-    (->> zipper
-         zip/down ;; go into statements
-         (compile-statements [] symbol-table)
-         (concat commands))))
+    (compile-statements
+     (concat commands (if (= subroutine-type "constructor") (compile-constructor symbol-table) []))
+     symbol-table (zip/down zipper))))
 
-(defn- compile-class [class-name class-zipper commands]
-  (cond
-    (= :subroutineDec (:tag (zip/node class-zipper)))
-    (->> class-zipper
-         zip/down
-         (compile-subroutine class-name)
-         (concat commands)
-         (recur class-name (zip/right class-zipper)))
+(defn- compile-class [class-name class-zipper symbol-table commands]
+  (let [node-tag (:tag (zip/node class-zipper))]
+    (cond
+      (= :subroutineDec node-tag)
+      (->> class-zipper
+           zip/down
+           (compile-subroutine class-name symbol-table)
+           (concat commands)
+           (recur class-name (zip/right class-zipper) symbol-table))
 
-    :else commands))
+      (= :classVarDec node-tag)
+      (as-> class-zipper return-val
+        (st/add-class-variables return-val symbol-table)
+        (recur class-name (:zipper return-val) (:symbol-table return-val) commands))
+
+      :else commands)))
 
 (defn compile-code [parse-tree]
   (reset! if-count -1) ;; hack because repl shenanigans
@@ -216,4 +229,4 @@
   (let [parse-tree-zipper (zip-str parse-tree)
         class-name (zip/node (zip/down (zip/right (zip/down parse-tree-zipper))))
         class-body (zip/right (zip/right (zip/right (zip/down parse-tree-zipper))))]
-    (compile-class class-name class-body [])))
+    (compile-class class-name class-body (st/create-empty-symbol-table) [])))

@@ -42,8 +42,8 @@
           table (add-vars-to-table original-table-size table var-zipper)]
       (recur table (zip/right zipper) original-table-size))))
 
-(defn create-table-for-expression-list [zipper]
-  (add-argument-to-table [] (zip/down zipper) 0))
+(defn create-table-for-expression-list [zipper table]
+  (add-argument-to-table table (zip/down zipper) 0))
 
 (defn add-local-vars-to-table [zipper table]
   (recur-add-local-vars-to-table table zipper (count table)))

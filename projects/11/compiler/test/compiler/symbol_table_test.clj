@@ -50,9 +50,10 @@
        ))
 
 (deftest symbol-table-for-expression-list
-  (is (= [{:name "foo" :type "Fraction", :position 0 :scope :argument}
+  (is (= [{:name "baz" :type "boolean" :position 0 :scope :this}
+          {:name "foo" :type "Fraction", :position 0 :scope :argument}
           {:name "bar" :type "int" :position 1 :scope :argument}]
-         (create-table-for-expression-list (get-instructions-expression-list ["function int main(Fraction foo, int bar) {}"])))))
+         (create-table-for-expression-list (get-instructions-expression-list ["function int main(Fraction foo, int bar) {}"]) [{:name "baz" :type "boolean" :position 0 :scope :this}]))))
 
 (deftest symbol-table-for-local-variables
   (is (= [{:name "foo" :type "Fraction", :position 0 :scope :local}
@@ -71,13 +72,13 @@
 
 (deftest getting-a-symbol-by-name
   (let [symbol-table
-        (create-table-for-expression-list (get-instructions-expression-list ["function int main(Fraction foo, int bar) {}"]))]
+        (create-table-for-expression-list (get-instructions-expression-list ["function int main(Fraction foo, int bar) {}"]) [])]
     (is (= {:name "foo" :type "Fraction", :position 0 :scope :argument}
            (get-symbol-by-name "foo" symbol-table)))))
 
 (deftest getting-the-number-of-variables-in-scope
   (let [symbol-table
-        (create-table-for-expression-list (get-instructions-expression-list ["function int main(Fraction foo, int bar) {}"]))]
+        (create-table-for-expression-list (get-instructions-expression-list ["function int main(Fraction foo, int bar) {}"]) [])]
     (is (= 2 (get-scope-variable-count :argument symbol-table)))))
 
 (deftest creating-an-empty-symbol-table

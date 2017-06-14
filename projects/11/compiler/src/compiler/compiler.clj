@@ -187,7 +187,7 @@
         {subroutine-name :value zipper :zipper} (zip-and-fetch-node-content zipper [zip/right zip/right])
 
         {arguments :value zipper :zipper} (zip-and-apply zipper [zip/right zip/right] [zip/node  zip/xml-zip]) ;; isolate arg list
-        symbol-table (st/create-table-for-expression-list arguments)
+        symbol-table (st/create-table-for-expression-list arguments [])
         zipper (zip-and-discard zipper [zip/right zip/right zip/down zip/next zip/next])
 
         {symbol-table :symbol-table zipper :zipper} (st/add-local-vars-to-table zipper symbol-table)

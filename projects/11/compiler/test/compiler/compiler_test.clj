@@ -195,3 +195,25 @@
       9 "pop this 2"
       10 "push pointer 0"
       11 "return")))
+
+(deftest calling-methods-on-self
+  (let [instructions ["class Square {" "constructor Square new() {" "do draw();" "return this;" "}" "method void draw() {" "return;" "}" "}"]
+        output (compile-code (format-tokens-for-compiler instructions))]
+    (are [path value] (= (nth output path) value)
+      0 "function Square.new 0"
+      1 "push constant 0"
+      2 "call Memory.alloc 1"
+      3 "pop pointer 0"
+      4 "push pointer 0"
+      5 "call Square.draw 1"
+      6 "pop temp 0"
+      7 "push pointer 0"
+      8 "return"
+      9 "function Square.draw 0"
+      10 "push argument 0"
+      11 "pop pointer 0"
+      12 "push constant 0"
+      13 "return")))
+
+;; write test that handles method (not function!) definitions
+;; write test for calling method on class that has same name as local var

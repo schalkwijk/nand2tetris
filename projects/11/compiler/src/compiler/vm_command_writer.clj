@@ -4,8 +4,8 @@
 (defn- output [& bits]
   (str/join " " (flatten bits)))
 
-(defn write-subroutine-declaration [subroutine-type class-name subroutine-name number-of-args]
-  (output subroutine-type (str class-name "." subroutine-name) number-of-args))
+(defn write-subroutine-declaration [class-name subroutine-name number-of-args]
+  (output "function" (str class-name "." subroutine-name) number-of-args))
 
 (defn write-segment-push [segment index]
   (output "push" segment index))

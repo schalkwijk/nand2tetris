@@ -192,7 +192,7 @@
 
         {symbol-table :symbol-table zipper :zipper} (st/add-local-vars-to-table zipper symbol-table)
         local-var-count (st/get-scope-variable-count :local symbol-table)
-        commands [(writer/write-subroutine-declaration subroutine-type class-name subroutine-name local-var-count)]]
+        commands [(writer/write-subroutine-declaration class-name subroutine-name local-var-count)]]
 
     (->> zipper
          zip/down ;; go into statements

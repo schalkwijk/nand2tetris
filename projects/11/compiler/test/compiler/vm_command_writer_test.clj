@@ -3,7 +3,7 @@
             [compiler.vm-command-writer :refer :all]))
 
 (deftest writing-function-declaration
-  (is (= "function BankAccount.transfer 3" (write-subroutine-declaration "function" "BankAccount" "transfer" 3))))
+  (is (= "function BankAccount.transfer 3" (write-subroutine-declaration "BankAccount" "transfer" 3))))
 
 (deftest writing-constant-push
   (is (= "push constant 5" (write-constant-push 5))))

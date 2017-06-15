@@ -275,4 +275,33 @@
       41 "push constant 0"
       42 "return")))
 
+(deftest handling-simple-array-assignment
+  (let [instructions ["class Main {" "function void main() {" "var Array a;" "var int i, sum;" "let a = Array.new(1);" "let i = 0;" "let a[i] = Keyboard.readInt();" "let sum = sum + a[i];" "return;" "}" "}"]
+        output (compile-code (format-tokens-for-compiler instructions))]
+    (are [path value] (= (nth output path) value)
+      0 "function Main.main 3"
+      1 "push constant 1"
+      2 "call Array.new 1"
+      3 "pop local 0"
+      4 "push constant 0"
+      5 "pop local 1"
+      6 "push local 1"
+      7 "push local 0"
+      8 "add"
+      9 "call Keyboard.readInt 0"
+      10 "pop temp 0"
+      11 "pop pointer 1"
+      12 "push temp 0"
+      13 "pop that 0"
+      14 "push local 2"
+      15 "push local 1"
+      16 "push local 0"
+      17 "add"
+      18 "pop pointer 1"
+      19 "push that 0"
+      20 "add"
+      21 "pop local 2"
+      22 "push constant 0"
+      23 "return")))
+
 ;; write test for calling method on class that has same name as local var

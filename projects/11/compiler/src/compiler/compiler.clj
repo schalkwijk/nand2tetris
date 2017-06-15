@@ -6,6 +6,7 @@
             [compiler.vm-command-writer :as writer]))
 
 (def zip-node-children [zip/node zip/xml-zip zip/down])
+(def unwind-array-assignment-stack ["pop temp 0", "pop pointer 1", "push temp 0", "pop that 0"])
 
 (declare compile-expression)
 (declare compile-expression-list)
@@ -49,6 +50,10 @@
   (concat [(writer/write-constant-push (count string-content)) (writer/write-subroutine-call "String.new" 1)]
           (flatten (map append-char string-content))))
 
+(defn- access-array-with-expression-result
+  [content symbol-table]
+  [(push-variable content symbol-table) "add" "pop pointer 1" "push that 0"])
+
 (defn- compile-term [symbol-table class-name zipper]
   (let [type (:tag (zip/node zipper))
         content (zip/node (zip/down zipper))]
@@ -63,7 +68,7 @@
       (concat (compile-expression symbol-table class-name (zip/right zipper) []) [(writer/write-negation-operator)])
 
       (and (= content "~") (= type :symbol))
-      (concat (compile-term symbol-table  class-name (zip/down (zip/right zipper))) [(writer/write-not-operator)])
+      (concat (compile-term symbol-table class-name (zip/down (zip/right zipper))) [(writer/write-not-operator)])
 
       (and (= content "true") (= type :keyword))
       [(writer/write-constant-push 0) (writer/write-not-operator)]
@@ -79,10 +84,17 @@
 
       (= type :identifier)
       (let [next-token (zip/right zipper)
-            token (if next-token (zip/node (zip/down next-token)) "")]
-        (if (or (= "(" token) (= "." token))
+            next-token-value (if next-token (zip/node (zip/down next-token)) "")]
+        (cond
+          (or (= "(" next-token-value) (= "." next-token-value))
           (compile-subroutine-call symbol-table class-name zipper)
-          [(push-variable content symbol-table)]))
+
+          (= "[" next-token-value)
+          (let [array-expression (:value (zip-and-apply zipper [zip/right zip/right] [zip/down]))]
+            (concat (compile-expression symbol-table class-name array-expression [])
+                    (access-array-with-expression-result content symbol-table)))
+
+          :else [(push-variable content symbol-table)]))
 
       :else [])))
 
@@ -118,8 +130,18 @@
 
 (defn- compile-let-statement [symbol-table class-name l-statement]
   (let [{variable-name :value zipper :zipper} (zip-and-fetch-node-content l-statement [zip/right])
-        {expression :value zipper :zipper} (zip-and-apply zipper [zip/right zip/right] [zip/down])]
-    (concat (compile-expression symbol-table class-name expression []) [(pop-into-variable variable-name symbol-table)])))
+        {assignment-or-array-index :value zipper :zipper} (zip-and-fetch-node-content zipper [zip/right])
+        {expression :value zipper :zipper} (zip-and-apply zipper [zip/right] [zip/down])
+        compiled-expression (compile-expression symbol-table class-name expression [])]
+    (cond
+      (= assignment-or-array-index "=")
+      (concat compiled-expression [(pop-into-variable variable-name symbol-table)])
+
+      (= assignment-or-array-index "[")
+      (let [expression-after-equals (:value (zip-and-apply zipper [zip/right zip/right zip/right] [zip/down]))]
+        (concat compiled-expression [(push-variable variable-name symbol-table) "add"]
+                (compile-expression symbol-table class-name expression-after-equals [])
+                unwind-array-assignment-stack)))))
 
 (defn- compile-return [symbol-table class-name return-statement]
   (if (= 2 (count (zip/children return-statement))) ;; void return

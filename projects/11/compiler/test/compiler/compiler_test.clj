@@ -227,4 +227,52 @@
       5 "push constant 0"
       6 "return")))
 
+(deftest compiling-string-constants
+  (let [instructions ["class Main {" "function void main() {" "do Keyboard.readInt(\"How many numbers? \");" "return;" "}" "}"]
+        output (compile-code (format-tokens-for-compiler instructions))]
+    (are [path value] (= (nth output path) value)
+      0 "function Main.main 0"
+      1 "push constant 18"
+      2 "call String.new 1"
+      3 "push constant 72"
+      4 "call String.appendChar 2"
+      5 "push constant 111"
+      6 "call String.appendChar 2"
+      7 "push constant 119"
+      8 "call String.appendChar 2"
+      9 "push constant 32"
+      10 "call String.appendChar 2"
+      11 "push constant 109"
+      12 "call String.appendChar 2"
+      13 "push constant 97"
+      14 "call String.appendChar 2"
+      15 "push constant 110"
+      16 "call String.appendChar 2"
+      17 "push constant 121"
+      18 "call String.appendChar 2"
+      19 "push constant 32"
+      20 "call String.appendChar 2"
+      21 "push constant 110"
+      22 "call String.appendChar 2"
+      23 "push constant 117"
+      24 "call String.appendChar 2"
+      25 "push constant 109"
+      26 "call String.appendChar 2"
+      27 "push constant 98"
+      28 "call String.appendChar 2"
+      29 "push constant 101"
+      30 "call String.appendChar 2"
+      31 "push constant 114"
+      32 "call String.appendChar 2"
+      33 "push constant 115"
+      34 "call String.appendChar 2"
+      35 "push constant 63"
+      36 "call String.appendChar 2"
+      37 "push constant 32"
+      38 "call String.appendChar 2"
+      39 "call Keyboard.readInt 1"
+      40 "pop temp 0"
+      41 "push constant 0"
+      42 "return")))
+
 ;; write test for calling method on class that has same name as local var

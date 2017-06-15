@@ -41,6 +41,14 @@
     (concat (compile-expression-list symbol-table class-name zipper)
             (compile-subroutine-call-with-correct-class symbol-table class-name function-call number-of-args zipper))))
 
+(defn- append-char [char]
+  [(writer/write-constant-push (int char))
+   (writer/write-subroutine-call "String.appendChar" 2)])
+
+(defn- compile-string [string-content]
+  (concat [(writer/write-constant-push (count string-content)) (writer/write-subroutine-call "String.new" 1)]
+          (flatten (map append-char string-content))))
+
 (defn- compile-term [symbol-table class-name zipper]
   (let [type (:tag (zip/node zipper))
         content (zip/node (zip/down zipper))]
@@ -65,6 +73,9 @@
 
       (and (= content "this") (= type :keyword))
       [(writer/write-segment-push "pointer" 0)]
+
+      (= type :stringConstant)
+      (compile-string content)
 
       (= type :identifier)
       (let [next-token (zip/right zipper)

@@ -304,4 +304,14 @@
       22 "push constant 0"
       23 "return")))
 
+(deftest handling-null-values
+  (let [instructions ["class Main {" "function void main() {" "var Array a;" "let a = null;" "return;" "}" "}"]
+        output (compile-code (format-tokens-for-compiler instructions))]
+    (are [path value] (= (nth output path) value)
+      0 "function Main.main 1"
+      1 "push constant 0"
+      2 "pop local 0"
+      3 "push constant 0"
+      4 "return")))
+
 ;; write test for calling method on class that has same name as local var

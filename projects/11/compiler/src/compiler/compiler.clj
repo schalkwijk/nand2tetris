@@ -73,7 +73,7 @@
       (and (= content "true") (= type :keyword))
       [(writer/write-constant-push 0) (writer/write-not-operator)]
 
-      (and (= content "false") (= type :keyword))
+      (and (or (= content "null") (= content "false")) (= type :keyword))
       [(writer/write-constant-push 0)]
 
       (and (= content "this") (= type :keyword))

@@ -23,6 +23,13 @@
   (let [{segment :scope position :position} (st/get-symbol-by-name variable-name symbol-table)]
     (writer/write-segment-push (name segment) position)))
 
+(defn- maybe-compile-instance-method-call [function-call symbol-table]
+  (if (= 1 (count function-call)) [(writer/write-segment-push "pointer" 0)]
+      (let [maybe-known-symbol (st/get-symbol-by-name (first function-call) symbol-table)]
+        (if maybe-known-symbol
+          [(writer/write-segment-push (name (:scope maybe-known-symbol)) (:position maybe-known-symbol))] []))))
+
+
 (defn- compile-subroutine-call-with-correct-class [symbol-table class-name call-bits number-of-args zipper]
   (let [maybe-known-symbol (st/get-symbol-by-name (first call-bits) symbol-table)]
     (cond
@@ -33,13 +40,13 @@
       [(writer/write-subroutine-call (str/join call-bits) number-of-args)]
 
       :else
-      [(writer/write-segment-push (name (:scope maybe-known-symbol)) (:position maybe-known-symbol))
-       (writer/write-subroutine-call (str/join (conj (rest call-bits) (:type maybe-known-symbol))) (inc number-of-args))])))
+      [(writer/write-subroutine-call (str/join (conj (rest call-bits) (:type maybe-known-symbol))) (inc number-of-args))])))
 
 (defn- compile-subroutine-call [symbol-table class-name zipper]
   (let [{zipper :zipper function-call :consumed} (consume-content-until-value "(" zipper)
         number-of-args (count (filter #(not (= (first (:content %)) ",")) (zip/children zipper)))]
-    (concat (compile-expression-list symbol-table class-name zipper)
+    (concat (maybe-compile-instance-method-call function-call symbol-table)
+            (compile-expression-list symbol-table class-name zipper)
             (compile-subroutine-call-with-correct-class symbol-table class-name function-call number-of-args zipper))))
 
 (defn- append-char [char]
@@ -116,14 +123,11 @@
 (defn- compile-expression-list [symbol-table class-name zipper]
   (reduce #(concat %1 (compile-expression symbol-table class-name (zip/down (zip/xml-zip %2)) [])) [] (zip/children zipper)))
 
-(defn- maybe-compile-instance-method-call [function-call]
-  (if (= 1 (count function-call)) [(writer/write-segment-push "pointer" 0)] []))
-
 (defn- compile-do-statement [symbol-table class-name do-statement]
   (let [{zipper :zipper function-call :consumed} (consume-content-until-value "(" (zip/right do-statement))
         number-of-args (count (filter #(not (= "," (first (:content %)))) (zip/children zipper)))]
     (concat
-     (maybe-compile-instance-method-call function-call)
+     (maybe-compile-instance-method-call function-call symbol-table)
      (compile-expression-list symbol-table class-name zipper)
      (compile-subroutine-call-with-correct-class symbol-table class-name function-call number-of-args zipper)
      [(str "pop temp 0")]))) ;; if it's a do statement, we discard the return value
@@ -255,7 +259,8 @@
 
         {symbol-table :symbol-table zipper :zipper} (st/add-local-vars-to-table zipper symbol-table)
         local-var-count (st/get-scope-variable-count :local symbol-table)
-        commands [(writer/write-subroutine-declaration class-name subroutine-name local-var-count)]]
+        commands [(writer/write-subroutine-declaration class-name subroutine-name local-var-count)]
+        symbol-table (if (= subroutine-type "method") (st/increment-scope :argument symbol-table) symbol-table)]
 
     (compile-statements class-name
      (concat commands (compile-subroutine-specific-preamble subroutine-type symbol-table))

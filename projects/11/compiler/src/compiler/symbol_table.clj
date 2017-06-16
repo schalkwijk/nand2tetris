@@ -58,3 +58,6 @@
 
 (defn add-class-variables [zipper table]
   (recur-add-local-vars-to-table table zipper (count table)))
+
+(defn increment-scope [scope table]
+  (map #(if (= (:scope %) scope) (assoc % :position (inc (:position %))) %) table))

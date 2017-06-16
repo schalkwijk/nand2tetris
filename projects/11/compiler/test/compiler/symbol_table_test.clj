@@ -90,3 +90,9 @@
             {:name "y" :type "int" :position 1 :scope :this}
             {:name "z" :type "Foo" :position 0 :scope :static}]
            (:symbol-table (add-class-variables var-dec []))))))
+
+(deftest increment-symbol-table-scope
+  (let [symbol-table
+        (create-table-for-expression-list (get-instructions-expression-list ["function int main(Fraction foo, int bar) {}"]) [])]
+    (is (= [{:name "foo" :type "Fraction", :position 1 :scope :argument} {:name "bar" :type "int" :position 2 :scope :argument}]
+           (increment-scope :argument symbol-table)))))

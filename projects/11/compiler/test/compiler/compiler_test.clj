@@ -178,6 +178,40 @@
       9 "push constant 0"
       10 "return")))
 
+(deftest calling-multi-arg-methods-on-objects-in-do
+  (let [instructions ["class Main {" "field SquareGame game;" "method void main() {" "let game = SquareGame.new();" "do game.run(1, 2);" "return;" "}" "}"]
+        output (compile-code (format-tokens-for-compiler instructions))]
+    (are [path value] (= (nth output path) value)
+      0 "function Main.main 0"
+      1 "push argument 0"
+      2 "pop pointer 0"
+      3 "call SquareGame.new 0"
+      4 "pop this 0"
+      5 "push this 0"
+      6 "push constant 1"
+      7 "push constant 2"
+      8 "call SquareGame.run 3"
+      9 "pop temp 0"
+      10 "push constant 0"
+      11 "return")))
+
+(deftest calling-multi-arg-methods-on-objects
+  (let [instructions ["class Main {" "field SquareGame game;" "method void main() {" "var int i; let game = SquareGame.new();" "let i = game.run(1, 2);" "return;" "}" "}"]
+        output (compile-code (format-tokens-for-compiler instructions))]
+    (are [path value] (= (nth output path) value)
+      0 "function Main.main 1"
+      1 "push argument 0"
+      2 "pop pointer 0"
+      3 "call SquareGame.new 0"
+      4 "pop this 0"
+      5 "push this 0"
+      6 "push constant 1"
+      7 "push constant 2"
+      8 "call SquareGame.run 3"
+      9 "pop local 0"
+      10 "push constant 0"
+      11 "return")))
+
 ;; need test for multiple methods without colliding symbol tables
 (deftest constructors-and-instance-level-fields
   (let [instructions ["class Square {" "field int x, y;" "field int size;" "constructor Square new(int Ax, int Ay, int Asize) {" "let x = Ax;" "let y = Ay;" "let size = Asize;" "return this;" "}" "}"]
@@ -314,4 +348,24 @@
       3 "push constant 0"
       4 "return")))
 
-;; write test for calling method on class that has same name as local var
+(deftest handling-static-values
+  (let [instructions ["class Main {" "static Main instance;" "function void newInstance() {" "let instance = PongGame.new();" "return;" "}" "}"]
+        output (compile-code (format-tokens-for-compiler instructions))]
+    (are [path value] (= (nth output path) value)
+      0 "function Main.newInstance 0"
+      1 "call PongGame.new 0"
+      2 "pop static 0"
+      3 "push constant 0"
+      4 "return")))
+
+(deftest handling-subroutine-args-in-methods
+  (let [instructions ["class Main {" "method void newInstance(int foo) {" "var int bar;" "let bar = foo;" "return;" "}" "}"]
+        output (compile-code (format-tokens-for-compiler instructions))]
+    (are [path value] (= (nth output path) value)
+      0 "function Main.newInstance 1"
+      1 "push argument 0"
+      2 "pop pointer 0"
+      3 "push argument 1"
+      4 "pop local 0"
+      5 "push constant 0"
+      6 "return")))

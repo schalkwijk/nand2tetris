@@ -16,3 +16,4 @@ vm-translator*
 analyzer-0.1.0-SNAPSHOT-standalone.jar
 JackAnalyzer
 *projects/11/**/*.vm
+*projects/12/**/*.vm

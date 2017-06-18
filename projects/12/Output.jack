@@ -287,8 +287,8 @@ class Output {
     let currentRow = 0;
 
     while(currentRow < 12) {
+      let currentMemory = Memory.peek(16384 + anchor);
       if(~even) {
-        let currentMemory = Memory.peek(16384 + anchor);
         do Memory.poke(16384 + anchor, 255 & currentMemory);
       } else {
         do Memory.poke(16384 + anchor, -256 & currentMemory);

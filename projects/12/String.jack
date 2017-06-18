@@ -12,53 +12,122 @@
  */
 class String {
 
-    /** constructs a new empty string with a maximum length of maxLength
-     *  and initial length of 0. */
-    constructor String new(int maxLength) {
+  field int length;
+  field Array characters;
+  /** constructs a new empty string with a maximum length of maxLength
+  *  and initial length of 0. */
+  constructor String new(int maxLength) {
+    let length = 0;
+    let characters = null;
+    if(maxLength > 0) {
+      let characters = Array.new(maxLength);
+    }
+    return this;
+  }
+
+  /** Disposes this string. */
+  method void dispose() {
+    if(~(characters = null)) {
+      do characters.dispose();
+    }
+    do Memory.deAlloc(this);
+    return;
+  }
+
+  /** Returns the current length of this string. */
+  method int length() {
+    return length;
+  }
+
+  /** Returns the character at the j-th location of this string. */
+  method char charAt(int j) {
+    return characters[j];
+  }
+
+  /** Sets the character at the j-th location of this string to c. */
+  method void setCharAt(int j, char c) {
+    let characters[j] = c;
+    return;
+  }
+
+  /** Appends c to this string's end and returns this string. */
+  method String appendChar(char c) {
+    let characters[length] = c;
+    let length = length + 1;
+    return this;
+  }
+
+  /** Erases the last character from this string. */
+  method void eraseLastChar() {
+    let characters[length - 1] = null;
+    let length = length - 1;
+    return;
+  }
+
+  /** Returns the integer value of this string,
+  *  until a non-digit character is detected. */
+  method int intValue() {
+    var int position, value;
+    var boolean negative;
+
+    let position = 0;
+    let value = 0;
+
+    if(characters[0] = 45) { // looking for "-"
+      let negative = true;
+      let position = position + 1;
     }
 
-    /** Disposes this string. */
-    method void dispose() {
+    while(position < length) {
+      let value = value * 10;
+      let value = value + characters[position] - 48;
+      let position = position + 1;
     }
 
-    /** Returns the current length of this string. */
-    method int length() {
+    if(negative) {
+      return -value;
     }
 
-    /** Returns the character at the j-th location of this string. */
-    method char charAt(int j) {
-    }
+    return value;
+  }
 
-    /** Sets the character at the j-th location of this string to c. */
-    method void setCharAt(int j, char c) {
+  /** Sets this string to hold a representation of the given value. */
+  method void setInt(int val) {
+    if(val < 0) {
+      let length = 1;
+      do setCharAt(0, 45);
     }
+    let length = setIntRecur(Math.abs(val)) + 1;
+    return;
+  }
 
-    /** Appends c to this string's end and returns this string. */
-    method String appendChar(char c) {
+  method int setIntRecur(int val) {
+    var int lastDigit, depth;
+    if(val < 10) {
+      let characters[length] = 48 + val;
+      return length;
     }
+    let lastDigit = val - (10 * (val/10));
 
-    /** Erases the last character from this string. */
-    method void eraseLastChar() {
-    }
+    let depth = setIntRecur(val / 10) + 1;
+    let characters[depth] = lastDigit + 48;
+    do Memory.poke(8000 + depth, lastDigit);
 
-    /** Returns the integer value of this string, 
-     *  until a non-digit character is detected. */
-    method int intValue() {
-    }
+    return depth;
+  }
 
-    /** Sets this string to hold a representation of the given value. */
-    method void setInt(int val) {
-    }
+  /** Returns the new line character. */
+  function char newLine() {
+    return 128;
+  }
 
-    /** Returns the new line character. */
-    function char newLine() {
-    }
+  /** Returns the backspace character. */
+  function char backSpace() {
+    return 129;
+  }
 
-    /** Returns the backspace character. */
-    function char backSpace() {
-    }
-
-    /** Returns the double quote (") character. */
-    function char doubleQuote() {
-    }
+  /** Returns the double quote (") character. */
+  function char doubleQuote() {
+    return 34;
+  }
 }

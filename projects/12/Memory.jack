@@ -67,6 +67,8 @@ class Memory {
   /** De-allocates the given object (cast as an array) by making
   *  it available for future allocations. */
   function void deAlloc(Array o) {
+    let heap[tail] = o - 2 - heap;
+    let tail = o - 2 - heap;
     return;
   }
 }

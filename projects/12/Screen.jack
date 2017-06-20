@@ -125,11 +125,12 @@ class Screen {
 
   /** Draws a filled circle of radius r<=181 around (x,y), using the current color. */
   function void drawCircle(int cx, int cy, int r) {
-    var int dy;
+    var int dy, sqrt;
 
     let dy = -r;
     while(dy < (r + 1)) {
-      do Screen.drawLine(cx - Math.sqrt(r * r - (dy * dy)), cy + dy, cx + Math.sqrt(r * r - (dy * dy)), cy + dy);
+      let sqrt = Math.sqrt(r * r - (dy * dy));
+      do Screen.drawLine(cx - sqrt, cy + dy, cx + sqrt, cy + dy);
       let dy = dy + 1;
     }
 
